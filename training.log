@@ -1,0 +1,711 @@
+2026-03-28 15:15:34,067 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 15:15:34,068 [INFO] CUDA Version: 12.1
+2026-03-28 15:15:55,663 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 15:15:59,406 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 15:15:59,452 [INFO] Training with 54 classes:
+2026-03-28 15:15:59,463 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 15:15:59,471 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 15:15:59,479 [INFO]   apple_healthy: 1794 samples
+2026-03-28 15:15:59,486 [INFO]   apple_scab: 1753 samples
+2026-03-28 15:15:59,492 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 15:15:59,497 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 15:15:59,502 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 15:15:59,507 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 15:15:59,516 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 15:15:59,520 [INFO]   grape_healthy: 1518 samples
+2026-03-28 15:15:59,524 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 15:15:59,531 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 15:15:59,539 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 15:15:59,546 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 15:15:59,551 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 15:15:59,555 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 15:15:59,560 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 15:15:59,566 [INFO]   peach_healthy: 1516 samples
+2026-03-28 15:15:59,570 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 15:15:59,573 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 15:15:59,578 [INFO]   pepper_bell: 1730 samples
+2026-03-28 15:15:59,582 [INFO]   potato__early_blight: 702 samples
+2026-03-28 15:15:59,587 [INFO]   potato__healthy: 110 samples
+2026-03-28 15:15:59,591 [INFO]   potato__late_blight: 707 samples
+2026-03-28 15:15:59,596 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 15:15:59,599 [INFO]   potato_healthy: 1596 samples
+2026-03-28 15:15:59,603 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 15:15:59,607 [INFO]   ragi_blast: 2097 samples
+2026-03-28 15:15:59,612 [INFO]   ragi_healthy: 894 samples
+2026-03-28 15:15:59,617 [INFO]   ragi_rust: 1476 samples
+2026-03-28 15:15:59,621 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 15:15:59,624 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 15:15:59,627 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 15:15:59,632 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 15:15:59,637 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 15:15:59,640 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 15:15:59,644 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 15:15:59,647 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 15:15:59,652 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 15:15:59,657 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 15:15:59,662 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 15:15:59,667 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 15:15:59,672 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 15:15:59,676 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 15:15:59,680 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 15:15:59,684 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 15:15:59,689 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 15:15:59,697 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 15:15:59,702 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 15:15:59,720 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 15:15:59,737 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 15:15:59,743 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 15:15:59,748 [INFO]   wheat_healthy: 81 samples
+2026-03-28 15:15:59,752 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 15:16:00,677 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 15:16:00,984 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:16:00,985 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:16:01,086 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 15:16:01,428 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:16:01,598 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+You passed `num_labels=54` which is incompatible to the `id2label` map of length `1000`.
+2026-03-28 15:16:02,008 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|##########| 200/200 [00:00<00:00, 5127.51it/s]
+[1mViTForImageClassification LOAD REPORT[0m from: google/vit-base-patch16-224
+Key               | Status   |                                                                                           
+------------------+----------+-------------------------------------------------------------------------------------------
+classifier.bias   | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000]) vs model:torch.Size([54])          
+classifier.weight | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000, 768]) vs model:torch.Size([54, 768])
+
+Notes:
+- MISMATCH:	ckpt weights were loaded, but they did not match the original empty weight shapes.
+2026-03-28 15:16:02,668 [INFO] Trainable params: 85,840,182 / 85,840,182
+C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:381: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler() if use_amp else None
+2026-03-28 15:16:02,714 [INFO] Starting training for 3 epochs
+2026-03-28 15:16:02,715 [INFO] Mixed precision: True, Gradient accumulation: 2
+C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:410: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+Traceback (most recent call last):
+  File "C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py", line 613, in <module>
+    
+  File "C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py", line 599, in main
+    early_stopping_patience=args.early_stopping,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py", line 436, in train
+    train_loss += loss.item() * config.gradient_accumulation_steps
+                  ^^^^^^^^^^^
+RuntimeError: CUDA error: unspecified launch failure
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 15:15:28,012 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:15:28,011 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:15:28,012 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:15:28,319 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:15:28,319 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:15:28,421 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 15:15:28,421 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 15:15:28,728 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:15:28,728 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:15:28,830 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+2026-03-28 15:15:28,830 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+You passed `num_labels=54` which is incompatible to the `id2label` map of length `1000`.
+2026-03-28 15:15:29,138 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-03-28 15:15:29,138 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|##########| 200/200 [00:00<00:00, 3333.88it/s]
+[1mViTForImageClassification LOAD REPORT[0m from: google/vit-base-patch16-224
+Key               | Status   |                                                                                           
+------------------+----------+-------------------------------------------------------------------------------------------
+classifier.weight | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000, 768]) vs model:torch.Size([54, 768])
+classifier.bias   | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000]) vs model:torch.Size([54])          
+
+Notes:
+- MISMATCH:	ckpt weights were loaded, but they did not match the original empty weight shapes.
+2026-03-28 15:15:30,149 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 15:15:30,149 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 15:15:30,185 [INFO] Starting training for 3 epochs
+2026-03-28 15:15:30,185 [INFO] Mixed precision: True, Gradient accumulation: 2
+c:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:381: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler() if use_amp else None
+2026-03-28 15:15:30,185 [INFO] Starting training for 3 epochs
+2026-03-28 15:15:30,185 [INFO] Mixed precision: True, Gradient accumulation: 2
+2026-03-28 15:15:34,067 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 15:15:34,068 [INFO] CUDA Version: 12.1
+2026-03-28 15:15:55,663 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 15:15:59,406 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 15:15:59,452 [INFO] Training with 54 classes:
+2026-03-28 15:15:59,463 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 15:15:59,471 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 15:15:59,479 [INFO]   apple_healthy: 1794 samples
+2026-03-28 15:15:59,486 [INFO]   apple_scab: 1753 samples
+2026-03-28 15:15:59,492 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 15:15:59,497 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 15:15:59,502 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 15:15:59,507 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 15:15:59,516 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 15:15:59,520 [INFO]   grape_healthy: 1518 samples
+2026-03-28 15:15:59,524 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 15:15:59,531 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 15:15:59,539 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 15:15:59,546 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 15:15:59,551 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 15:15:59,555 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 15:15:59,560 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 15:15:59,566 [INFO]   peach_healthy: 1516 samples
+2026-03-28 15:15:59,570 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 15:15:59,573 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 15:15:59,578 [INFO]   pepper_bell: 1730 samples
+2026-03-28 15:15:59,582 [INFO]   potato__early_blight: 702 samples
+2026-03-28 15:15:59,587 [INFO]   potato__healthy: 110 samples
+2026-03-28 15:15:59,591 [INFO]   potato__late_blight: 707 samples
+2026-03-28 15:15:59,596 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 15:15:59,599 [INFO]   potato_healthy: 1596 samples
+2026-03-28 15:15:59,603 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 15:15:59,607 [INFO]   ragi_blast: 2097 samples
+2026-03-28 15:15:59,612 [INFO]   ragi_healthy: 894 samples
+2026-03-28 15:15:59,617 [INFO]   ragi_rust: 1476 samples
+2026-03-28 15:15:59,621 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 15:15:59,624 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 15:15:59,627 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 15:15:59,632 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 15:15:59,637 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 15:15:59,640 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 15:15:59,644 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 15:15:59,647 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 15:15:59,652 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 15:15:59,657 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 15:15:59,662 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 15:15:59,667 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 15:15:59,672 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 15:15:59,676 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 15:15:59,680 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 15:15:59,684 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 15:15:59,689 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 15:15:59,697 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 15:15:59,702 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 15:15:59,720 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 15:15:59,737 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 15:15:59,743 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 15:15:59,748 [INFO]   wheat_healthy: 81 samples
+2026-03-28 15:15:59,752 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 15:16:00,677 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 15:16:00,984 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:16:00,985 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 15:16:01,086 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 15:16:01,428 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 15:16:01,598 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+2026-03-28 15:16:02,008 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-03-28 15:16:02,668 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 15:16:02,714 [INFO] Starting training for 3 epochs
+2026-03-28 15:16:02,715 [INFO] Mixed precision: True, Gradient accumulation: 2
+c:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:410: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+2026-03-28 18:36:48,591 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 18:36:48,591 [INFO] CUDA Version: 12.1
+2026-03-28 18:36:48,591 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 18:36:48,591 [INFO] CUDA Version: 12.1
+2026-03-28 18:37:23,071 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 18:37:23,071 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 18:37:31,248 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 18:37:31,248 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 18:37:31,269 [INFO] Training with 54 classes:
+2026-03-28 18:37:31,275 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 18:37:31,281 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 18:37:31,269 [INFO] Training with 54 classes:
+2026-03-28 18:37:31,275 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 18:37:31,281 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 18:37:31,287 [INFO]   apple_healthy: 1794 samples
+2026-03-28 18:37:31,292 [INFO]   apple_scab: 1753 samples
+2026-03-28 18:37:31,297 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 18:37:31,287 [INFO]   apple_healthy: 1794 samples
+2026-03-28 18:37:31,292 [INFO]   apple_scab: 1753 samples
+2026-03-28 18:37:31,297 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 18:37:31,303 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 18:37:31,308 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 18:37:31,303 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 18:37:31,308 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 18:37:31,313 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 18:37:31,319 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 18:37:31,324 [INFO]   grape_healthy: 1518 samples
+2026-03-28 18:37:31,313 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 18:37:31,319 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 18:37:31,324 [INFO]   grape_healthy: 1518 samples
+2026-03-28 18:37:31,329 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 18:37:31,334 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 18:37:31,339 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 18:37:31,329 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 18:37:31,334 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 18:37:31,339 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 18:37:31,344 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 18:37:31,349 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 18:37:31,354 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 18:37:31,359 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 18:37:31,344 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 18:37:31,349 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 18:37:31,354 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 18:37:31,359 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 18:37:31,364 [INFO]   peach_healthy: 1516 samples
+2026-03-28 18:37:31,369 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 18:37:31,375 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 18:37:31,364 [INFO]   peach_healthy: 1516 samples
+2026-03-28 18:37:31,369 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 18:37:31,375 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 18:37:31,380 [INFO]   pepper_bell: 1730 samples
+2026-03-28 18:37:31,385 [INFO]   potato__early_blight: 702 samples
+2026-03-28 18:37:31,390 [INFO]   potato__healthy: 110 samples
+2026-03-28 18:37:31,380 [INFO]   pepper_bell: 1730 samples
+2026-03-28 18:37:31,385 [INFO]   potato__early_blight: 702 samples
+2026-03-28 18:37:31,390 [INFO]   potato__healthy: 110 samples
+2026-03-28 18:37:31,395 [INFO]   potato__late_blight: 707 samples
+2026-03-28 18:37:31,400 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 18:37:31,405 [INFO]   potato_healthy: 1596 samples
+2026-03-28 18:37:31,395 [INFO]   potato__late_blight: 707 samples
+2026-03-28 18:37:31,400 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 18:37:31,405 [INFO]   potato_healthy: 1596 samples
+2026-03-28 18:37:31,410 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 18:37:31,415 [INFO]   ragi_blast: 2097 samples
+2026-03-28 18:37:31,421 [INFO]   ragi_healthy: 894 samples
+2026-03-28 18:37:31,410 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 18:37:31,415 [INFO]   ragi_blast: 2097 samples
+2026-03-28 18:37:31,421 [INFO]   ragi_healthy: 894 samples
+2026-03-28 18:37:31,427 [INFO]   ragi_rust: 1476 samples
+2026-03-28 18:37:31,432 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 18:37:31,427 [INFO]   ragi_rust: 1476 samples
+2026-03-28 18:37:31,432 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 18:37:31,437 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 18:37:31,442 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 18:37:31,447 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 18:37:31,452 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 18:37:31,437 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 18:37:31,442 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 18:37:31,447 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 18:37:31,452 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 18:37:31,458 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 18:37:31,463 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 18:37:31,468 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 18:37:31,458 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 18:37:31,463 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 18:37:31,468 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 18:37:31,473 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 18:37:31,478 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 18:37:31,473 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 18:37:31,478 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 18:37:31,484 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 18:37:31,490 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 18:37:31,496 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 18:37:31,484 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 18:37:31,490 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 18:37:31,496 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 18:37:31,502 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 18:37:31,509 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 18:37:31,502 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 18:37:31,509 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 18:37:31,516 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 18:37:31,523 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 18:37:31,530 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 18:37:31,516 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 18:37:31,523 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 18:37:31,530 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 18:37:31,535 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 18:37:31,541 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 18:37:31,535 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 18:37:31,541 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 18:37:31,547 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 18:37:31,554 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 18:37:31,562 [INFO]   wheat_healthy: 81 samples
+2026-03-28 18:37:31,547 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 18:37:31,554 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 18:37:31,562 [INFO]   wheat_healthy: 81 samples
+2026-03-28 18:37:31,569 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 18:37:31,569 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 18:37:32,906 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 18:37:32,906 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 18:37:33,213 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:37:33,213 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:37:33,267 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 18:37:33,267 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 18:37:33,623 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:37:33,623 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:37:33,725 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+2026-03-28 18:37:33,725 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+You passed `num_labels=54` which is incompatible to the `id2label` map of length `1000`.
+2026-03-28 18:37:34,135 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-03-28 18:37:34,135 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+Loading weights:   0%|          | 0/200 [00:00<?, ?it/s]Loading weights: 100%|##########| 200/200 [00:00<00:00, 2258.16it/s]
+[1mViTForImageClassification LOAD REPORT[0m from: google/vit-base-patch16-224
+Key               | Status   |                                                                                           
+------------------+----------+-------------------------------------------------------------------------------------------
+classifier.bias   | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000]) vs model:torch.Size([54])          
+classifier.weight | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([1000, 768]) vs model:torch.Size([54, 768])
+
+Notes:
+- MISMATCH:	ckpt weights were loaded, but they did not match the original empty weight shapes.
+2026-03-28 18:37:36,275 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 18:37:36,275 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 18:37:36,324 [INFO] Starting training for 3 epochs
+2026-03-28 18:37:36,325 [INFO] Mixed precision: True, Gradient accumulation: 2
+C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:381: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler() if use_amp else None
+2026-03-28 18:37:36,324 [INFO] Starting training for 3 epochs
+2026-03-28 18:37:36,325 [INFO] Mixed precision: True, Gradient accumulation: 2
+C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:410: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast():
+2026-03-28 18:43:34,177 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 18:43:34,178 [INFO] CUDA Version: 12.1
+2026-03-28 18:44:15,234 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 18:44:21,614 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 18:44:21,633 [INFO] Training with 54 classes:
+2026-03-28 18:44:21,638 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 18:44:21,644 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 18:44:21,650 [INFO]   apple_healthy: 1794 samples
+2026-03-28 18:44:21,656 [INFO]   apple_scab: 1753 samples
+2026-03-28 18:44:21,663 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 18:44:21,668 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 18:44:21,672 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 18:44:21,675 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 18:44:21,680 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 18:44:21,685 [INFO]   grape_healthy: 1518 samples
+2026-03-28 18:44:21,690 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 18:44:21,695 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 18:44:21,700 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 18:44:21,704 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 18:44:21,709 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 18:44:21,714 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 18:44:21,720 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 18:44:21,725 [INFO]   peach_healthy: 1516 samples
+2026-03-28 18:44:21,729 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 18:44:21,733 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 18:44:21,738 [INFO]   pepper_bell: 1730 samples
+2026-03-28 18:44:21,742 [INFO]   potato__early_blight: 702 samples
+2026-03-28 18:44:21,747 [INFO]   potato__healthy: 110 samples
+2026-03-28 18:44:21,751 [INFO]   potato__late_blight: 707 samples
+2026-03-28 18:44:21,756 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 18:44:21,761 [INFO]   potato_healthy: 1596 samples
+2026-03-28 18:44:21,766 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 18:44:21,770 [INFO]   ragi_blast: 2097 samples
+2026-03-28 18:44:21,775 [INFO]   ragi_healthy: 894 samples
+2026-03-28 18:44:21,778 [INFO]   ragi_rust: 1476 samples
+2026-03-28 18:44:21,782 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 18:44:21,786 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 18:44:21,790 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 18:44:21,794 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 18:44:21,799 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 18:44:21,804 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 18:44:21,809 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 18:44:21,814 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 18:44:21,819 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 18:44:21,823 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 18:44:21,827 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 18:44:21,832 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 18:44:21,836 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 18:44:21,841 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 18:44:21,846 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 18:44:21,850 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 18:44:21,855 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 18:44:21,860 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 18:44:21,865 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 18:44:21,870 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 18:44:21,875 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 18:44:21,880 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 18:44:21,885 [INFO]   wheat_healthy: 81 samples
+2026-03-28 18:44:21,891 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 18:44:23,223 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 18:44:23,224 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 18:44:23,531 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:44:23,632 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 18:44:23,939 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 18:44:23,997 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+2026-03-28 18:44:24,349 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-03-28 18:45:06,908 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 18:45:06,951 [INFO] Starting training for 3 epochs
+2026-03-28 18:45:06,951 [INFO] Mixed precision: True, Gradient accumulation: 2
+2026-03-28 19:01:04,297 [INFO] Using GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-03-28 19:01:04,297 [INFO] CUDA Version: 12.1
+2026-03-28 19:01:42,382 [INFO] Loaded 84971 examples from data\manifests\train.csv
+2026-03-28 19:01:50,279 [INFO] Loaded 18208 examples from data\manifests\val.csv
+2026-03-28 19:01:50,301 [INFO] Training with 54 classes:
+2026-03-28 19:01:50,306 [INFO]   apple_black_rot: 1677 samples
+2026-03-28 19:01:50,312 [INFO]   apple_cedar_apple_rust: 1539 samples
+2026-03-28 19:01:50,317 [INFO]   apple_healthy: 1794 samples
+2026-03-28 19:01:50,323 [INFO]   apple_scab: 1753 samples
+2026-03-28 19:01:50,329 [INFO]   blueberry_healthy: 1600 samples
+2026-03-28 19:01:50,335 [INFO]   cherry_(including_sour)_healthy: 1620 samples
+2026-03-28 19:01:50,340 [INFO]   cherry_(including_sour)_powdery_mildew: 1501 samples
+2026-03-28 19:01:50,345 [INFO]   grape_black_rot: 1641 samples
+2026-03-28 19:01:50,351 [INFO]   grape_esca_(black_measles): 1677 samples
+2026-03-28 19:01:50,357 [INFO]   grape_healthy: 1518 samples
+2026-03-28 19:01:50,363 [INFO]   grape_leaf_blight_(isariopsis_leaf_spot): 1542 samples
+2026-03-28 19:01:50,368 [INFO]   maize_(maize)_cercospora_leaf_spot_gray_leaf_spot: 1427 samples
+2026-03-28 19:01:50,374 [INFO]   maize_(maize)_common_rust_: 1644 samples
+2026-03-28 19:01:50,380 [INFO]   maize_(maize)_healthy: 1631 samples
+2026-03-28 19:01:50,386 [INFO]   maize_(maize)_northern_leaf_blight: 1677 samples
+2026-03-28 19:01:50,392 [INFO]   orange_haunglongbing_(citrus_greening): 1739 samples
+2026-03-28 19:01:50,397 [INFO]   peach_bacterial_spot: 1586 samples
+2026-03-28 19:01:50,403 [INFO]   peach_healthy: 1516 samples
+2026-03-28 19:01:50,408 [INFO]   pepper,_bell_bacterial_spot: 1666 samples
+2026-03-28 19:01:50,414 [INFO]   pepper,_bell_healthy: 1712 samples
+2026-03-28 19:01:50,419 [INFO]   pepper_bell: 1730 samples
+2026-03-28 19:01:50,424 [INFO]   potato__early_blight: 702 samples
+2026-03-28 19:01:50,429 [INFO]   potato__healthy: 110 samples
+2026-03-28 19:01:50,435 [INFO]   potato__late_blight: 707 samples
+2026-03-28 19:01:50,440 [INFO]   potato_early_blight: 1674 samples
+2026-03-28 19:01:50,445 [INFO]   potato_healthy: 1596 samples
+2026-03-28 19:01:50,451 [INFO]   potato_late_blight: 1701 samples
+2026-03-28 19:01:50,457 [INFO]   ragi_blast: 2097 samples
+2026-03-28 19:01:50,463 [INFO]   ragi_healthy: 894 samples
+2026-03-28 19:01:50,469 [INFO]   ragi_rust: 1476 samples
+2026-03-28 19:01:50,475 [INFO]   raspberry_healthy: 1582 samples
+2026-03-28 19:01:50,481 [INFO]   rice_leaf_aug: 2686 samples
+2026-03-28 19:01:50,487 [INFO]   soybean_healthy: 1794 samples
+2026-03-28 19:01:50,493 [INFO]   squash_powdery_mildew: 1560 samples
+2026-03-28 19:01:50,500 [INFO]   strawberry_healthy: 1568 samples
+2026-03-28 19:01:50,504 [INFO]   strawberry_leaf_scorch: 1564 samples
+2026-03-28 19:01:50,511 [INFO]   sugarcane_healthy: 346 samples
+2026-03-28 19:01:50,516 [INFO]   sugarcane_mosaic: 330 samples
+2026-03-28 19:01:50,520 [INFO]   sugarcane_redrot: 366 samples
+2026-03-28 19:01:50,526 [INFO]   sugarcane_rust: 377 samples
+2026-03-28 19:01:50,530 [INFO]   sugarcane_yellow: 331 samples
+2026-03-28 19:01:50,535 [INFO]   tomato_bacterial_spot: 3018 samples
+2026-03-28 19:01:50,541 [INFO]   tomato_early_blight: 2326 samples
+2026-03-28 19:01:50,546 [INFO]   tomato_healthy: 2782 samples
+2026-03-28 19:01:50,552 [INFO]   tomato_late_blight: 2922 samples
+2026-03-28 19:01:50,557 [INFO]   tomato_leaf_mold: 2326 samples
+2026-03-28 19:01:50,563 [INFO]   tomato_mosaic_virus: 1847 samples
+2026-03-28 19:01:50,568 [INFO]   tomato_septoria_leaf_spot: 2738 samples
+2026-03-28 19:01:50,574 [INFO]   tomato_spider_mites_two_spotted_spider_mite: 2660 samples
+2026-03-28 19:01:50,580 [INFO]   tomato_target_spot: 2555 samples
+2026-03-28 19:01:50,586 [INFO]   tomato_yellow_leaf_curl_virus: 1721 samples
+2026-03-28 19:01:50,592 [INFO]   tomato_yellowleaf: 2267 samples
+2026-03-28 19:01:50,598 [INFO]   wheat_healthy: 81 samples
+2026-03-28 19:01:50,603 [INFO]   wheat_yellow_rust: 77 samples
+2026-03-28 19:01:52,100 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-03-28 19:01:52,408 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/preprocessor_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 19:01:52,465 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/preprocessor_config.json "HTTP/1.1 200 OK"
+2026-03-28 19:01:52,840 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-03-28 19:01:52,931 [INFO] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/google/vit-base-patch16-224/3f49326eb077187dfe1c2a2bb15fbd74e6ab91e3/config.json "HTTP/1.1 200 OK"
+2026-03-28 19:01:53,239 [INFO] HTTP Request: HEAD https://huggingface.co/google/vit-base-patch16-224/resolve/main/model.safetensors "HTTP/1.1 302 Found"
+2026-03-28 19:01:53,240 [WARNING] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-03-28 19:03:07,416 [INFO] Trainable params: 85,840,182 / 85,840,182
+2026-03-28 19:03:07,451 [INFO] Starting training for 3 epochs
+2026-03-28 19:03:07,452 [INFO] Mixed precision: True, Gradient accumulation: 2
+2026-04-22 22:32:20,747 [INFO] Training device: cuda:0
+2026-04-22 22:32:20,753 [INFO] GPU: NVIDIA GeForce RTX 4060 Laptop GPU (8.6 GB)
+2026-04-22 22:32:20,762 [INFO] Found 92 classes in data/unified
+2026-04-22 22:32:20,851 [INFO]   apple___apple_scab: 2016 images
+2026-04-22 22:32:20,937 [INFO]   apple___black_rot: 1987 images
+2026-04-22 22:32:21,007 [INFO]   apple___cedar_apple_rust: 1760 images
+2026-04-22 22:32:21,088 [INFO]   apple___healthy: 2008 images
+2026-04-22 22:32:21,155 [INFO]   blueberry___healthy: 1816 images
+2026-04-22 22:32:21,227 [INFO]   cherry___healthy: 1826 images
+2026-04-22 22:32:21,466 [INFO]   cherry___powdery_mildew: 1683 images
+2026-04-22 22:32:21,467 [INFO]   cotton___american_bollworm: 56 images
+2026-04-22 22:32:21,467 [INFO]   cotton___anthracnose: 29 images
+2026-04-22 22:32:21,488 [INFO]   cotton___aphid: 287 images
+2026-04-22 22:32:21,488 [INFO]   ... and 82 more classes
+2026-04-22 22:32:23,174 [INFO] Total images: 91420, Classes: 92
+2026-04-22 22:32:23,834 [INFO] Train: 77707, Val: 13713
+2026-04-22 22:32:23,837 [INFO] Class distribution: min=2, max=2727, mean=845
+2026-04-22 22:33:03,904 [INFO] Loaded pretrained EfficientNet-B4 weights
+2026-04-22 22:33:03,913 [INFO] EfficientNet-B4 configured for 92 classes
+2026-04-22 22:33:04,120 [INFO] Starting training: 50 epochs, batch_size=32, lr=0.0001
+2026-04-22 22:33:04,121 [INFO] Classes: 92, Model: EfficientNet-B4
+2026-04-22 22:33:52,916 [INFO]   Epoch 1/50 | Batch 50/2428 | Loss: 4.4732 | Acc: 1.2%
+2026-04-22 22:34:10,018 [INFO]   Epoch 1/50 | Batch 100/2428 | Loss: 4.3509 | Acc: 3.9%
+2026-04-22 22:34:26,609 [INFO]   Epoch 1/50 | Batch 150/2428 | Loss: 4.1220 | Acc: 6.9%
+2026-04-22 22:34:43,051 [INFO]   Epoch 1/50 | Batch 200/2428 | Loss: 3.8453 | Acc: 10.1%
+2026-04-22 22:34:58,964 [INFO]   Epoch 1/50 | Batch 250/2428 | Loss: 3.4396 | Acc: 12.6%
+2026-04-22 22:35:14,973 [INFO]   Epoch 1/50 | Batch 300/2428 | Loss: 3.2614 | Acc: 15.4%
+2026-04-22 22:35:31,148 [INFO]   Epoch 1/50 | Batch 350/2428 | Loss: 2.9619 | Acc: 17.9%
+2026-04-22 22:35:47,174 [INFO]   Epoch 1/50 | Batch 400/2428 | Loss: 2.8520 | Acc: 20.2%
+2026-04-22 22:36:02,936 [INFO]   Epoch 1/50 | Batch 450/2428 | Loss: 3.0235 | Acc: 22.9%
+2026-04-22 22:36:19,222 [INFO]   Epoch 1/50 | Batch 500/2428 | Loss: 2.7017 | Acc: 25.3%
+2026-04-22 22:36:35,362 [INFO]   Epoch 1/50 | Batch 550/2428 | Loss: 2.1757 | Acc: 27.6%
+2026-04-22 22:36:51,566 [INFO]   Epoch 1/50 | Batch 600/2428 | Loss: 2.2576 | Acc: 29.5%
+2026-04-22 22:37:07,930 [INFO]   Epoch 1/50 | Batch 650/2428 | Loss: 2.0981 | Acc: 31.5%
+2026-04-22 22:37:23,884 [INFO]   Epoch 1/50 | Batch 700/2428 | Loss: 2.2880 | Acc: 33.2%
+2026-04-22 22:37:39,821 [INFO]   Epoch 1/50 | Batch 750/2428 | Loss: 2.0349 | Acc: 34.9%
+2026-04-22 22:37:56,169 [INFO]   Epoch 1/50 | Batch 800/2428 | Loss: 1.9453 | Acc: 36.4%
+2026-04-22 22:38:12,738 [INFO]   Epoch 1/50 | Batch 850/2428 | Loss: 1.7552 | Acc: 38.0%
+2026-04-22 22:38:29,539 [INFO]   Epoch 1/50 | Batch 900/2428 | Loss: 2.0108 | Acc: 39.3%
+2026-04-22 22:38:46,174 [INFO]   Epoch 1/50 | Batch 950/2428 | Loss: 1.5563 | Acc: 40.7%
+2026-04-22 22:39:02,084 [INFO]   Epoch 1/50 | Batch 1000/2428 | Loss: 1.6212 | Acc: 42.1%
+2026-04-22 22:39:17,997 [INFO]   Epoch 1/50 | Batch 1050/2428 | Loss: 1.5736 | Acc: 43.2%
+2026-04-22 22:39:33,781 [INFO]   Epoch 1/50 | Batch 1100/2428 | Loss: 1.7286 | Acc: 44.3%
+2026-04-22 22:39:49,664 [INFO]   Epoch 1/50 | Batch 1150/2428 | Loss: 1.5920 | Acc: 45.4%
+2026-04-22 22:40:05,647 [INFO]   Epoch 1/50 | Batch 1200/2428 | Loss: 1.9663 | Acc: 46.4%
+2026-04-22 22:40:21,407 [INFO]   Epoch 1/50 | Batch 1250/2428 | Loss: 1.5491 | Acc: 47.5%
+2026-04-22 22:40:37,372 [INFO]   Epoch 1/50 | Batch 1300/2428 | Loss: 1.7517 | Acc: 48.5%
+2026-04-22 22:40:53,359 [INFO]   Epoch 1/50 | Batch 1350/2428 | Loss: 1.4570 | Acc: 49.5%
+2026-04-22 22:41:09,236 [INFO]   Epoch 1/50 | Batch 1400/2428 | Loss: 1.5581 | Acc: 50.5%
+2026-04-22 22:41:25,393 [INFO]   Epoch 1/50 | Batch 1450/2428 | Loss: 1.2702 | Acc: 51.5%
+2026-04-22 22:41:41,615 [INFO]   Epoch 1/50 | Batch 1500/2428 | Loss: 1.5960 | Acc: 52.3%
+2026-04-22 22:41:57,630 [INFO]   Epoch 1/50 | Batch 1550/2428 | Loss: 1.1889 | Acc: 53.1%
+2026-04-22 22:42:13,674 [INFO]   Epoch 1/50 | Batch 1600/2428 | Loss: 1.4978 | Acc: 53.8%
+2026-04-22 22:42:29,606 [INFO]   Epoch 1/50 | Batch 1650/2428 | Loss: 1.4764 | Acc: 54.6%
+2026-04-22 22:42:45,536 [INFO]   Epoch 1/50 | Batch 1700/2428 | Loss: 1.4553 | Acc: 55.3%
+2026-04-22 22:43:01,606 [INFO]   Epoch 1/50 | Batch 1750/2428 | Loss: 1.0725 | Acc: 56.1%
+2026-04-22 22:43:17,798 [INFO]   Epoch 1/50 | Batch 1800/2428 | Loss: 1.2401 | Acc: 56.8%
+2026-04-22 22:43:33,790 [INFO]   Epoch 1/50 | Batch 1850/2428 | Loss: 1.1175 | Acc: 57.5%
+2026-04-22 22:43:49,922 [INFO]   Epoch 1/50 | Batch 1900/2428 | Loss: 1.6013 | Acc: 58.2%
+2026-04-22 22:44:06,021 [INFO]   Epoch 1/50 | Batch 1950/2428 | Loss: 1.1794 | Acc: 58.8%
+2026-04-22 22:44:22,266 [INFO]   Epoch 1/50 | Batch 2000/2428 | Loss: 1.1281 | Acc: 59.4%
+2026-04-22 22:44:38,450 [INFO]   Epoch 1/50 | Batch 2050/2428 | Loss: 1.1944 | Acc: 60.0%
+2026-04-22 22:44:54,544 [INFO]   Epoch 1/50 | Batch 2100/2428 | Loss: 1.4394 | Acc: 60.5%
+2026-04-22 22:45:10,633 [INFO]   Epoch 1/50 | Batch 2150/2428 | Loss: 1.2168 | Acc: 61.0%
+2026-04-22 22:45:26,660 [INFO]   Epoch 1/50 | Batch 2200/2428 | Loss: 1.2387 | Acc: 61.6%
+2026-04-22 22:45:42,311 [INFO]   Epoch 1/50 | Batch 2250/2428 | Loss: 1.2132 | Acc: 62.1%
+2026-04-22 22:45:55,583 [INFO]   Epoch 1/50 | Batch 2300/2428 | Loss: 1.0219 | Acc: 62.6%
+2026-04-22 22:46:08,814 [INFO]   Epoch 1/50 | Batch 2350/2428 | Loss: 1.5544 | Acc: 63.0%
+2026-04-22 22:46:22,183 [INFO]   Epoch 1/50 | Batch 2400/2428 | Loss: 1.6772 | Acc: 63.5%
+2026-04-22 22:47:20,264 [INFO] Epoch 1/50 | Train Loss: 1.9641 | Train Acc: 63.7% | Val Loss: 1.0119 | Val Acc: 91.5% | LR: 0.000100 | Time: 856s
+2026-04-22 22:47:20,759 [INFO]   ✅ New best model saved! Val Acc: 91.5%
+2026-04-22 22:47:53,735 [INFO]   Epoch 2/50 | Batch 50/2428 | Loss: 1.2170 | Acc: 84.4%
+2026-04-22 22:48:07,251 [INFO]   Epoch 2/50 | Batch 100/2428 | Loss: 1.0611 | Acc: 84.5%
+2026-04-22 22:48:20,780 [INFO]   Epoch 2/50 | Batch 150/2428 | Loss: 1.1607 | Acc: 84.9%
+2026-04-22 22:48:33,792 [INFO]   Epoch 2/50 | Batch 200/2428 | Loss: 1.1806 | Acc: 85.5%
+2026-04-22 22:48:47,009 [INFO]   Epoch 2/50 | Batch 250/2428 | Loss: 1.3614 | Acc: 85.6%
+2026-04-22 22:49:00,387 [INFO]   Epoch 2/50 | Batch 300/2428 | Loss: 1.2291 | Acc: 85.9%
+2026-04-22 22:49:13,469 [INFO]   Epoch 2/50 | Batch 350/2428 | Loss: 1.2283 | Acc: 86.0%
+2026-04-22 22:49:26,481 [INFO]   Epoch 2/50 | Batch 400/2428 | Loss: 1.2288 | Acc: 85.8%
+2026-04-22 22:49:39,680 [INFO]   Epoch 2/50 | Batch 450/2428 | Loss: 1.0890 | Acc: 86.1%
+2026-04-22 22:49:52,942 [INFO]   Epoch 2/50 | Batch 500/2428 | Loss: 1.3454 | Acc: 86.2%
+2026-04-22 22:50:06,138 [INFO]   Epoch 2/50 | Batch 550/2428 | Loss: 1.2400 | Acc: 86.3%
+2026-04-22 22:50:19,403 [INFO]   Epoch 2/50 | Batch 600/2428 | Loss: 0.9628 | Acc: 86.3%
+2026-04-22 22:50:32,550 [INFO]   Epoch 2/50 | Batch 650/2428 | Loss: 1.3185 | Acc: 86.3%
+2026-04-22 22:50:45,745 [INFO]   Epoch 2/50 | Batch 700/2428 | Loss: 1.1246 | Acc: 86.2%
+2026-04-22 22:50:58,871 [INFO]   Epoch 2/50 | Batch 750/2428 | Loss: 0.9967 | Acc: 86.4%
+2026-04-22 22:51:11,755 [INFO]   Epoch 2/50 | Batch 800/2428 | Loss: 1.0744 | Acc: 86.4%
+2026-04-22 22:51:24,770 [INFO]   Epoch 2/50 | Batch 850/2428 | Loss: 1.2239 | Acc: 86.5%
+2026-04-22 22:51:37,803 [INFO]   Epoch 2/50 | Batch 900/2428 | Loss: 1.3377 | Acc: 86.6%
+2026-04-22 22:51:50,898 [INFO]   Epoch 2/50 | Batch 950/2428 | Loss: 1.0340 | Acc: 86.7%
+2026-04-22 22:52:04,259 [INFO]   Epoch 2/50 | Batch 1000/2428 | Loss: 1.0772 | Acc: 86.8%
+2026-04-22 22:52:17,135 [INFO]   Epoch 2/50 | Batch 1050/2428 | Loss: 1.0989 | Acc: 86.9%
+2026-04-22 22:52:30,071 [INFO]   Epoch 2/50 | Batch 1100/2428 | Loss: 1.1359 | Acc: 86.9%
+2026-04-22 22:52:42,945 [INFO]   Epoch 2/50 | Batch 1150/2428 | Loss: 1.1181 | Acc: 86.9%
+2026-04-22 22:52:55,994 [INFO]   Epoch 2/50 | Batch 1200/2428 | Loss: 1.1945 | Acc: 87.0%
+2026-04-22 22:53:09,036 [INFO]   Epoch 2/50 | Batch 1250/2428 | Loss: 1.1481 | Acc: 87.0%
+2026-04-22 22:53:22,076 [INFO]   Epoch 2/50 | Batch 1300/2428 | Loss: 0.9324 | Acc: 87.0%
+2026-04-22 22:53:35,203 [INFO]   Epoch 2/50 | Batch 1350/2428 | Loss: 1.0606 | Acc: 87.1%
+2026-04-22 22:53:48,420 [INFO]   Epoch 2/50 | Batch 1400/2428 | Loss: 1.1855 | Acc: 87.1%
+2026-04-22 22:54:01,574 [INFO]   Epoch 2/50 | Batch 1450/2428 | Loss: 1.0971 | Acc: 87.1%
+2026-04-22 22:54:14,674 [INFO]   Epoch 2/50 | Batch 1500/2428 | Loss: 1.1255 | Acc: 87.2%
+2026-04-22 22:54:27,920 [INFO]   Epoch 2/50 | Batch 1550/2428 | Loss: 1.0560 | Acc: 87.3%
+2026-04-22 22:54:41,207 [INFO]   Epoch 2/50 | Batch 1600/2428 | Loss: 1.1330 | Acc: 87.3%
+2026-04-22 22:54:54,298 [INFO]   Epoch 2/50 | Batch 1650/2428 | Loss: 1.0963 | Acc: 87.4%
+2026-04-22 22:55:07,739 [INFO]   Epoch 2/50 | Batch 1700/2428 | Loss: 1.0172 | Acc: 87.4%
+2026-04-22 22:55:20,917 [INFO]   Epoch 2/50 | Batch 1750/2428 | Loss: 1.1198 | Acc: 87.4%
+2026-04-22 22:55:34,259 [INFO]   Epoch 2/50 | Batch 1800/2428 | Loss: 1.1753 | Acc: 87.5%
+2026-04-22 22:55:47,445 [INFO]   Epoch 2/50 | Batch 1850/2428 | Loss: 1.2115 | Acc: 87.5%
+2026-04-22 22:56:00,644 [INFO]   Epoch 2/50 | Batch 1900/2428 | Loss: 1.0008 | Acc: 87.5%
+2026-04-22 22:56:13,705 [INFO]   Epoch 2/50 | Batch 1950/2428 | Loss: 1.3090 | Acc: 87.6%
+2026-04-22 22:56:26,976 [INFO]   Epoch 2/50 | Batch 2000/2428 | Loss: 0.9624 | Acc: 87.6%
+2026-04-22 22:56:40,144 [INFO]   Epoch 2/50 | Batch 2050/2428 | Loss: 0.9638 | Acc: 87.7%
+2026-04-22 22:56:53,332 [INFO]   Epoch 2/50 | Batch 2100/2428 | Loss: 0.9497 | Acc: 87.8%
+2026-04-22 22:57:06,588 [INFO]   Epoch 2/50 | Batch 2150/2428 | Loss: 1.2625 | Acc: 87.8%
+2026-04-22 22:57:19,768 [INFO]   Epoch 2/50 | Batch 2200/2428 | Loss: 1.2613 | Acc: 87.9%
+2026-04-22 22:57:32,834 [INFO]   Epoch 2/50 | Batch 2250/2428 | Loss: 0.9596 | Acc: 87.9%
+2026-04-22 22:57:45,905 [INFO]   Epoch 2/50 | Batch 2300/2428 | Loss: 1.0691 | Acc: 88.0%
+2026-04-22 22:57:58,892 [INFO]   Epoch 2/50 | Batch 2350/2428 | Loss: 1.0212 | Acc: 88.0%
+2026-04-22 22:58:11,973 [INFO]   Epoch 2/50 | Batch 2400/2428 | Loss: 1.0547 | Acc: 88.1%
+2026-04-22 22:59:06,196 [INFO] Epoch 2/50 | Train Loss: 1.1049 | Train Acc: 88.1% | Val Loss: 0.9354 | Val Acc: 93.2% | LR: 0.000100 | Time: 705s
+2026-04-22 22:59:06,615 [INFO]   ✅ New best model saved! Val Acc: 93.2%
+2026-04-22 22:59:37,723 [INFO]   Epoch 3/50 | Batch 50/2428 | Loss: 0.9780 | Acc: 88.6%
+2026-04-22 22:59:51,195 [INFO]   Epoch 3/50 | Batch 100/2428 | Loss: 0.9699 | Acc: 89.7%
+2026-04-22 23:00:04,754 [INFO]   Epoch 3/50 | Batch 150/2428 | Loss: 1.0575 | Acc: 89.7%
+2026-04-22 23:00:17,885 [INFO]   Epoch 3/50 | Batch 200/2428 | Loss: 0.9595 | Acc: 89.7%
+2026-04-22 23:00:30,601 [INFO]   Epoch 3/50 | Batch 250/2428 | Loss: 0.9529 | Acc: 89.6%
+2026-04-22 23:00:43,414 [INFO]   Epoch 3/50 | Batch 300/2428 | Loss: 1.1838 | Acc: 89.9%
+2026-04-22 23:00:56,628 [INFO]   Epoch 3/50 | Batch 350/2428 | Loss: 1.0394 | Acc: 90.0%
+2026-04-22 23:01:09,775 [INFO]   Epoch 3/50 | Batch 400/2428 | Loss: 0.9692 | Acc: 90.1%
+2026-04-22 23:01:22,841 [INFO]   Epoch 3/50 | Batch 450/2428 | Loss: 1.0076 | Acc: 90.2%
+2026-04-22 23:01:36,001 [INFO]   Epoch 3/50 | Batch 500/2428 | Loss: 1.0563 | Acc: 90.1%
+2026-04-22 23:01:49,236 [INFO]   Epoch 3/50 | Batch 550/2428 | Loss: 1.0167 | Acc: 90.3%
+2026-04-22 23:02:02,071 [INFO]   Epoch 3/50 | Batch 600/2428 | Loss: 0.9909 | Acc: 90.4%
+2026-04-22 23:02:15,070 [INFO]   Epoch 3/50 | Batch 650/2428 | Loss: 0.8987 | Acc: 90.5%
+2026-04-22 23:02:28,197 [INFO]   Epoch 3/50 | Batch 700/2428 | Loss: 0.9490 | Acc: 90.6%
+2026-04-22 23:02:40,998 [INFO]   Epoch 3/50 | Batch 750/2428 | Loss: 0.9779 | Acc: 90.7%
+2026-04-22 23:02:54,556 [INFO]   Epoch 3/50 | Batch 800/2428 | Loss: 1.0396 | Acc: 90.7%
+2026-04-22 23:03:07,751 [INFO]   Epoch 3/50 | Batch 850/2428 | Loss: 1.0983 | Acc: 90.7%
+2026-04-22 23:03:20,499 [INFO]   Epoch 3/50 | Batch 900/2428 | Loss: 0.9280 | Acc: 90.7%
+2026-04-22 23:03:33,308 [INFO]   Epoch 3/50 | Batch 950/2428 | Loss: 0.9810 | Acc: 90.7%
+2026-04-22 23:03:46,196 [INFO]   Epoch 3/50 | Batch 1000/2428 | Loss: 0.9532 | Acc: 90.7%
+2026-04-22 23:03:59,191 [INFO]   Epoch 3/50 | Batch 1050/2428 | Loss: 1.2726 | Acc: 90.7%
+2026-04-22 23:04:12,486 [INFO]   Epoch 3/50 | Batch 1100/2428 | Loss: 0.9386 | Acc: 90.7%
+2026-04-22 23:04:25,805 [INFO]   Epoch 3/50 | Batch 1150/2428 | Loss: 0.9597 | Acc: 90.7%
+2026-04-22 23:04:39,033 [INFO]   Epoch 3/50 | Batch 1200/2428 | Loss: 0.9376 | Acc: 90.8%
+2026-04-22 23:04:52,281 [INFO]   Epoch 3/50 | Batch 1250/2428 | Loss: 0.8896 | Acc: 90.8%
+2026-04-22 23:05:05,543 [INFO]   Epoch 3/50 | Batch 1300/2428 | Loss: 1.1815 | Acc: 90.8%
+2026-04-22 23:05:18,994 [INFO]   Epoch 3/50 | Batch 1350/2428 | Loss: 1.1111 | Acc: 90.8%
+2026-04-22 23:05:32,530 [INFO]   Epoch 3/50 | Batch 1400/2428 | Loss: 1.0145 | Acc: 90.8%
+2026-04-22 23:05:46,379 [INFO]   Epoch 3/50 | Batch 1450/2428 | Loss: 1.0132 | Acc: 90.9%
+2026-04-22 23:05:59,875 [INFO]   Epoch 3/50 | Batch 1500/2428 | Loss: 0.9474 | Acc: 90.9%
+2026-04-22 23:06:13,252 [INFO]   Epoch 3/50 | Batch 1550/2428 | Loss: 1.1413 | Acc: 91.0%
+2026-04-22 23:06:26,244 [INFO]   Epoch 3/50 | Batch 1600/2428 | Loss: 1.1842 | Acc: 91.0%
+2026-04-22 23:06:39,886 [INFO]   Epoch 3/50 | Batch 1650/2428 | Loss: 1.0429 | Acc: 90.9%
+2026-04-22 23:06:53,582 [INFO]   Epoch 3/50 | Batch 1700/2428 | Loss: 0.9384 | Acc: 90.9%
+2026-04-22 23:07:07,144 [INFO]   Epoch 3/50 | Batch 1750/2428 | Loss: 0.9070 | Acc: 90.9%
+2026-04-22 23:07:20,976 [INFO]   Epoch 3/50 | Batch 1800/2428 | Loss: 0.9889 | Acc: 90.9%
+2026-04-22 23:07:34,983 [INFO]   Epoch 3/50 | Batch 1850/2428 | Loss: 0.9450 | Acc: 91.0%
+2026-04-22 23:07:48,689 [INFO]   Epoch 3/50 | Batch 1900/2428 | Loss: 1.0765 | Acc: 91.0%
+2026-04-22 23:08:02,444 [INFO]   Epoch 3/50 | Batch 1950/2428 | Loss: 1.0033 | Acc: 91.0%
+2026-04-22 23:08:16,389 [INFO]   Epoch 3/50 | Batch 2000/2428 | Loss: 0.9111 | Acc: 91.0%
+2026-04-22 23:08:30,211 [INFO]   Epoch 3/50 | Batch 2050/2428 | Loss: 0.9441 | Acc: 91.0%
+2026-04-22 23:08:44,431 [INFO]   Epoch 3/50 | Batch 2100/2428 | Loss: 0.9775 | Acc: 91.0%
+2026-04-22 23:08:58,449 [INFO]   Epoch 3/50 | Batch 2150/2428 | Loss: 0.9662 | Acc: 91.1%
+2026-04-22 23:09:14,516 [INFO]   Epoch 3/50 | Batch 2200/2428 | Loss: 0.9817 | Acc: 91.1%
+2026-04-22 23:09:30,575 [INFO]   Epoch 3/50 | Batch 2250/2428 | Loss: 0.9919 | Acc: 91.1%
+2026-04-22 23:09:44,579 [INFO]   Epoch 3/50 | Batch 2300/2428 | Loss: 1.0296 | Acc: 91.1%
+2026-04-22 23:09:58,266 [INFO]   Epoch 3/50 | Batch 2350/2428 | Loss: 0.9876 | Acc: 91.1%
+2026-04-22 23:10:11,786 [INFO]   Epoch 3/50 | Batch 2400/2428 | Loss: 0.8662 | Acc: 91.1%
+2026-04-22 23:11:08,523 [INFO] Epoch 3/50 | Train Loss: 1.0131 | Train Acc: 91.1% | Val Loss: 0.9093 | Val Acc: 93.7% | LR: 0.000099 | Time: 722s
+2026-04-22 23:11:08,925 [INFO]   ✅ New best model saved! Val Acc: 93.7%
+2026-04-22 23:11:40,624 [INFO]   Epoch 4/50 | Batch 50/2428 | Loss: 0.9686 | Acc: 91.7%
+2026-04-22 23:11:54,323 [INFO]   Epoch 4/50 | Batch 100/2428 | Loss: 1.0448 | Acc: 91.8%
+2026-04-22 23:12:07,954 [INFO]   Epoch 4/50 | Batch 150/2428 | Loss: 0.9841 | Acc: 92.3%
+2026-04-22 23:12:21,565 [INFO]   Epoch 4/50 | Batch 200/2428 | Loss: 0.9584 | Acc: 92.0%
+2026-04-22 23:12:34,899 [INFO]   Epoch 4/50 | Batch 250/2428 | Loss: 0.9608 | Acc: 92.0%
+2026-04-22 23:12:48,287 [INFO]   Epoch 4/50 | Batch 300/2428 | Loss: 0.9151 | Acc: 92.2%
+2026-04-22 23:13:01,920 [INFO]   Epoch 4/50 | Batch 350/2428 | Loss: 1.1100 | Acc: 92.1%
+2026-04-22 23:13:15,740 [INFO]   Epoch 4/50 | Batch 400/2428 | Loss: 1.0622 | Acc: 92.3%
+2026-04-22 23:13:29,726 [INFO]   Epoch 4/50 | Batch 450/2428 | Loss: 0.9850 | Acc: 92.1%
+2026-04-22 23:13:43,609 [INFO]   Epoch 4/50 | Batch 500/2428 | Loss: 0.9522 | Acc: 92.2%
+2026-04-22 23:13:57,060 [INFO]   Epoch 4/50 | Batch 550/2428 | Loss: 0.8962 | Acc: 92.2%
+2026-04-22 23:14:10,125 [INFO]   Epoch 4/50 | Batch 600/2428 | Loss: 0.9142 | Acc: 92.2%
+2026-04-22 23:14:23,433 [INFO]   Epoch 4/50 | Batch 650/2428 | Loss: 1.1175 | Acc: 92.2%
+2026-04-22 23:14:36,431 [INFO]   Epoch 4/50 | Batch 700/2428 | Loss: 0.8924 | Acc: 92.2%
+2026-04-22 23:14:49,682 [INFO]   Epoch 4/50 | Batch 750/2428 | Loss: 1.0074 | Acc: 92.1%
+2026-04-22 23:15:02,629 [INFO]   Epoch 4/50 | Batch 800/2428 | Loss: 1.0136 | Acc: 92.1%
+2026-04-22 23:15:15,959 [INFO]   Epoch 4/50 | Batch 850/2428 | Loss: 0.9474 | Acc: 92.1%
+2026-04-22 23:15:29,413 [INFO]   Epoch 4/50 | Batch 900/2428 | Loss: 0.9298 | Acc: 92.1%
+2026-04-22 23:15:42,900 [INFO]   Epoch 4/50 | Batch 950/2428 | Loss: 0.9131 | Acc: 92.1%
+2026-04-22 23:15:56,436 [INFO]   Epoch 4/50 | Batch 1000/2428 | Loss: 0.8516 | Acc: 92.2%
+2026-04-22 23:16:10,186 [INFO]   Epoch 4/50 | Batch 1050/2428 | Loss: 1.0403 | Acc: 92.2%
+2026-04-22 23:16:23,636 [INFO]   Epoch 4/50 | Batch 1100/2428 | Loss: 1.0400 | Acc: 92.2%
+2026-04-22 23:16:37,161 [INFO]   Epoch 4/50 | Batch 1150/2428 | Loss: 0.9270 | Acc: 92.2%
+2026-04-22 23:16:50,802 [INFO]   Epoch 4/50 | Batch 1200/2428 | Loss: 0.9304 | Acc: 92.2%
+2026-04-22 23:17:04,497 [INFO]   Epoch 4/50 | Batch 1250/2428 | Loss: 0.9421 | Acc: 92.3%
+2026-04-22 23:17:18,933 [INFO]   Epoch 4/50 | Batch 1300/2428 | Loss: 1.1196 | Acc: 92.2%
+2026-04-22 23:17:33,303 [INFO]   Epoch 4/50 | Batch 1350/2428 | Loss: 0.8668 | Acc: 92.2%
+2026-04-22 23:17:47,852 [INFO]   Epoch 4/50 | Batch 1400/2428 | Loss: 0.9228 | Acc: 92.2%
+2026-04-22 23:18:01,796 [INFO]   Epoch 4/50 | Batch 1450/2428 | Loss: 0.9267 | Acc: 92.2%
+2026-04-22 23:18:15,538 [INFO]   Epoch 4/50 | Batch 1500/2428 | Loss: 0.8956 | Acc: 92.2%
+2026-04-22 23:18:29,072 [INFO]   Epoch 4/50 | Batch 1550/2428 | Loss: 0.9367 | Acc: 92.2%
+2026-04-22 23:18:42,969 [INFO]   Epoch 4/50 | Batch 1600/2428 | Loss: 0.9253 | Acc: 92.2%
+2026-04-22 23:18:56,513 [INFO]   Epoch 4/50 | Batch 1650/2428 | Loss: 0.9712 | Acc: 92.3%
+2026-04-22 23:19:10,425 [INFO]   Epoch 4/50 | Batch 1700/2428 | Loss: 1.1164 | Acc: 92.2%
+2026-04-22 23:19:24,471 [INFO]   Epoch 4/50 | Batch 1750/2428 | Loss: 0.8919 | Acc: 92.2%
+2026-04-22 23:19:37,749 [INFO]   Epoch 4/50 | Batch 1800/2428 | Loss: 1.1093 | Acc: 92.2%
+2026-04-22 23:19:50,899 [INFO]   Epoch 4/50 | Batch 1850/2428 | Loss: 0.9955 | Acc: 92.2%
+2026-04-22 23:20:03,837 [INFO]   Epoch 4/50 | Batch 1900/2428 | Loss: 0.9693 | Acc: 92.2%
+2026-04-22 23:20:17,012 [INFO]   Epoch 4/50 | Batch 1950/2428 | Loss: 0.9369 | Acc: 92.2%
+2026-04-22 23:20:30,529 [INFO]   Epoch 4/50 | Batch 2000/2428 | Loss: 0.9475 | Acc: 92.2%
+2026-04-22 23:20:43,857 [INFO]   Epoch 4/50 | Batch 2050/2428 | Loss: 1.0138 | Acc: 92.2%
+2026-04-22 23:20:57,066 [INFO]   Epoch 4/50 | Batch 2100/2428 | Loss: 0.9461 | Acc: 92.3%
+2026-04-22 23:21:10,167 [INFO]   Epoch 4/50 | Batch 2150/2428 | Loss: 0.9241 | Acc: 92.3%
+2026-04-22 23:21:23,347 [INFO]   Epoch 4/50 | Batch 2200/2428 | Loss: 0.9374 | Acc: 92.3%
+2026-04-22 23:21:36,451 [INFO]   Epoch 4/50 | Batch 2250/2428 | Loss: 1.0208 | Acc: 92.3%
+2026-04-22 23:21:49,538 [INFO]   Epoch 4/50 | Batch 2300/2428 | Loss: 0.9172 | Acc: 92.3%
+2026-04-22 23:22:02,748 [INFO]   Epoch 4/50 | Batch 2350/2428 | Loss: 0.9763 | Acc: 92.3%
+2026-04-22 23:22:15,994 [INFO]   Epoch 4/50 | Batch 2400/2428 | Loss: 1.0340 | Acc: 92.3%
+2026-04-22 23:23:09,015 [INFO] Epoch 4/50 | Train Loss: 0.9694 | Train Acc: 92.3% | Val Loss: 0.8863 | Val Acc: 95.0% | LR: 0.000098 | Time: 720s
+2026-04-22 23:23:09,546 [INFO]   ✅ New best model saved! Val Acc: 95.0%

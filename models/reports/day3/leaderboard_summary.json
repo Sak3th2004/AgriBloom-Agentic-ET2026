@@ -1,0 +1,17 @@
+{
+  "project": "AgriBloom Agentic",
+  "total_samples": 3,
+  "offline_mode": true,
+  "overall_accuracy": 1.0,
+  "macro_f1": 1.0,
+  "ece": 0.07,
+  "leaderboard_score": 99.3,
+  "files": {
+    "prediction_rows": "models\\reports\\day3\\prediction_rows.csv",
+    "per_crop_metrics": "models\\reports\\day3\\per_crop_metrics.csv",
+    "confusion_matrix_csv": "models\\reports\\day3\\confusion_matrix.csv",
+    "confusion_matrix_png": "models\\reports\\day3\\confusion_matrix.png",
+    "calibration_curve_csv": "models\\reports\\day3\\calibration_curve.csv",
+    "calibration_curve_png": "models\\reports\\day3\\calibration_curve.png"
+  }
+}

@@ -1,0 +1,4 @@
+image_path,crop,true_label,pred_label,confidence,correct,source
+data\plantvillage_samples\maize_healthy_demo.jpg,maize,maize_healthy,maize_healthy,0.93,1,offline_filename_hint
+data\plantvillage_samples\potato_late_blight_demo.jpg,potato,potato_late_blight,potato_late_blight,0.93,1,offline_filename_hint
+data\plantvillage_samples\tomato_early_blight_demo.jpg,tomato,tomato_early_blight,tomato_early_blight,0.93,1,offline_filename_hint

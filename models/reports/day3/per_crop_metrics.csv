@@ -1,0 +1,4 @@
+crop,samples,accuracy,mean_confidence
+maize,1,1.0,0.93
+potato,1,1.0,0.93
+tomato,1,1.0,0.93

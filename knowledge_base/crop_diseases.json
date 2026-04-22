@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "source": "ICAR, KVK advisories, Indian agricultural research",
+    "last_updated": "2026-04-22",
+    "total_diseases": 65
+  },
+  "diseases": {
+    "tomato_late_blight": {
+      "crop": "tomato",
+      "disease": "Late Blight",
+      "pathogen": "Phytophthora infestans",
+      "severity": "critical",
+      "yield_loss": "70-100%",
+      "symptoms": ["Dark water-soaked spots on leaves", "White fungal growth on leaf undersides", "Fruit develops brown patches", "Rapid wilting in humid weather"],
+      "favorable_conditions": {"temperature": "15-22°C", "humidity": ">90%", "rain": "prolonged wet periods"},
+      "treatment": [
+        {"chemical": "Metalaxyl 8% + Mancozeb 64% WP", "dosage": "2.5g/L", "approved_by": "ICAR", "phi_days": 14},
+        {"chemical": "Cymoxanil 8% + Mancozeb 64% WP", "dosage": "3g/L", "approved_by": "CIB&RC", "phi_days": 14},
+        {"chemical": "Copper Oxychloride 50% WP", "dosage": "3g/L", "approved_by": "ICAR", "phi_days": 7}
+      ],
+      "organic_treatment": ["Bordeaux mixture 1%", "Trichoderma viride 5g/L soil drench", "Neem oil 5ml/L"],
+      "prevention": ["Use certified disease-free transplants", "Avoid overhead irrigation", "Maintain plant spacing 60x45cm", "Remove infected plants immediately", "Rotate crops — avoid solanaceous crops in same field for 3 years"],
+      "indian_varieties_resistant": ["Arka Rakshak", "Arka Samrat", "IIHR-2274"]
+    },
+    "tomato_early_blight": {
+      "crop": "tomato",
+      "disease": "Early Blight",
+      "pathogen": "Alternaria solani",
+      "severity": "high",
+      "yield_loss": "30-50%",
+      "symptoms": ["Concentric ring-shaped brown spots on lower leaves", "Yellowing around spots", "Leaves dry and fall prematurely"],
+      "treatment": [
+        {"chemical": "Chlorothalonil 75% WP", "dosage": "2g/L", "approved_by": "ICAR", "phi_days": 14},
+        {"chemical": "Mancozeb 75% WP", "dosage": "2.5g/L", "approved_by": "CIB&RC", "phi_days": 21}
+      ],
+      "organic_treatment": ["Pseudomonas fluorescens 10g/L", "Trichoderma harzianum 5g/L"],
+      "prevention": ["Stake plants for air circulation", "Mulch soil surface", "Avoid wetting leaves during irrigation"]
+    },
+    "rice_blast": {
+      "crop": "rice",
+      "disease": "Rice Blast",
+      "pathogen": "Magnaporthe oryzae",
+      "severity": "critical",
+      "yield_loss": "50-90%",
+      "symptoms": ["Diamond/spindle shaped spots on leaves", "Grey center with brown border", "Neck rot at panicle base", "White or grey lesions"],
+      "favorable_conditions": {"temperature": "25-28°C", "humidity": ">90%", "nitrogen": "excess nitrogen promotes blast"},
+      "treatment": [
+        {"chemical": "Tricyclazole 75% WP", "dosage": "0.6g/L", "approved_by": "ICAR-IIRR", "phi_days": 21},
+        {"chemical": "Isoprothiolane 40% EC", "dosage": "1.5ml/L", "approved_by": "ICAR", "phi_days": 14},
+        {"chemical": "Carbendazim 50% WP", "dosage": "1g/L", "approved_by": "CIB&RC", "phi_days": 14}
+      ],
+      "organic_treatment": ["Pseudomonas fluorescens 10g/L seed treatment", "Trichoderma harzianum"],
+      "prevention": ["Avoid excess nitrogen", "Use blast-resistant varieties", "Maintain 5cm water level", "Seed treatment with Carbendazim"],
+      "indian_varieties_resistant": ["Improved Samba Mahsuri", "Rajendra Mahsuri", "CO-39", "ADT-36"]
+    },
+    "rice_brown_spot": {
+      "crop": "rice",
+      "disease": "Brown Spot",
+      "pathogen": "Bipolaris oryzae",
+      "severity": "medium",
+      "yield_loss": "15-30%",
+      "symptoms": ["Oval brown spots on leaves", "Dark brown lesions on grains", "Seedling blight"],
+      "treatment": [
+        {"chemical": "Mancozeb 75% WP", "dosage": "2.5g/L", "approved_by": "ICAR", "phi_days": 21},
+        {"chemical": "Zineb 75% WP", "dosage": "2.5g/L", "approved_by": "CIB&RC", "phi_days": 21}
+      ],
+      "organic_treatment": ["Zinc Sulphate 25kg/acre soil application", "Pseudomonas fluorescens"],
+      "prevention": ["Balanced fertilization — especially zinc", "Seed treatment", "Good drainage"]
+    },
+    "wheat_yellow_rust": {
+      "crop": "wheat",
+      "disease": "Yellow Rust (Stripe Rust)",
+      "pathogen": "Puccinia striiformis",
+      "severity": "high",
+      "yield_loss": "30-70%",
+      "symptoms": ["Yellow-orange pustules in stripes along leaf veins", "Leaves dry and shrivel", "Severe in cool, humid weather"],
+      "treatment": [
+        {"chemical": "Propiconazole 25% EC", "dosage": "1ml/L (0.1%)", "approved_by": "ICAR-IIWBR", "phi_days": 30},
+        {"chemical": "Tebuconazole 25% EC", "dosage": "1ml/L", "approved_by": "CIB&RC", "phi_days": 28}
+      ],
+      "organic_treatment": ["Neem oil 5%", "Bordeaux mixture 1%"],
+      "prevention": ["Grow rust-resistant varieties", "Early sowing", "Two sprays at 15-day interval"],
+      "indian_varieties_resistant": ["HD-3086", "PBW-725", "WH-1105", "DBW-17"]
+    },
+    "wheat_brown_rust": {
+      "crop": "wheat",
+      "disease": "Brown Rust (Leaf Rust)",
+      "pathogen": "Puccinia triticina",
+      "severity": "high",
+      "yield_loss": "30-40%",
+      "symptoms": ["Small round orange-brown pustules scattered on leaves", "Pustules on upper leaf surface"],
+      "treatment": [
+        {"chemical": "Propiconazole 25% EC", "dosage": "1ml/L", "approved_by": "ICAR", "phi_days": 30}
+      ],
+      "prevention": ["Grow resistant varieties", "Rogue early infected plants"]
+    },
+    "ragi_blast": {
+      "crop": "ragi",
+      "disease": "Finger Millet Blast",
+      "pathogen": "Magnaporthe grisea",
+      "severity": "high",
+      "yield_loss": "25-50%",
+      "symptoms": ["Diamond shaped spots on leaves", "Neck blast causing ear head drying", "Finger blast"],
+      "treatment": [
+        {"chemical": "Tricyclazole 75% WP", "dosage": "0.6g/L", "approved_by": "ICAR", "phi_days": 21},
+        {"chemical": "Carbendazim 50% WP", "dosage": "1g/L", "approved_by": "CIB&RC", "phi_days": 14}
+      ],
+      "organic_treatment": ["Seed treatment with Pseudomonas fluorescens", "Neem oil spray"],
+      "prevention": ["Avoid excess nitrogen", "Seed treatment before sowing", "Maintain field sanitation"],
+      "indian_varieties_resistant": ["GPU-28", "GPU-67", "MR-1"]
+    },
+    "sugarcane_red_rot": {
+      "crop": "sugarcane",
+      "disease": "Red Rot",
+      "pathogen": "Colletotrichum falcatum",
+      "severity": "critical",
+      "yield_loss": "50-100%",
+      "symptoms": ["Red discoloration inside stalk", "White patches within red area", "Drying of top leaves", "Shrinking of internodes"],
+      "treatment": [
+        {"chemical": "Carbendazim 50% WP", "dosage": "1g/L sett treatment for 30 min", "approved_by": "ICAR-SBI", "phi_days": 14}
+      ],
+      "organic_treatment": ["Trichoderma harzianum soil application", "Bio-fertilizers"],
+      "prevention": ["Use disease-free seed material", "Hot water treatment of setts (50°C, 2 hours)", "Crop rotation", "Remove and burn infected stalks"],
+      "indian_varieties_resistant": ["Co-0238", "CoS-8436", "CoPant-90223"]
+    },
+    "potato_late_blight": {
+      "crop": "potato",
+      "disease": "Late Blight",
+      "pathogen": "Phytophthora infestans",
+      "severity": "critical",
+      "yield_loss": "60-100%",
+      "symptoms": ["Water-soaked grey-green patches", "White fungal growth on undersides", "Rapidly spreading in humid conditions", "Tuber rot"],
+      "treatment": [
+        {"chemical": "Cymoxanil 8% + Mancozeb 64% WP", "dosage": "3g/L", "approved_by": "ICAR-CPRI", "phi_days": 14},
+        {"chemical": "Metalaxyl + Mancozeb", "dosage": "2.5g/L", "approved_by": "CIB&RC", "phi_days": 14}
+      ],
+      "prevention": ["Use certified seed tubers", "Proper earthing up", "Avoid excess irrigation", "Destroy infected tubers"],
+      "indian_varieties_resistant": ["Kufri Jyoti", "Kufri Sadabahar", "Kufri Khyati"]
+    },
+    "maize_northern_leaf_blight": {
+      "crop": "maize",
+      "disease": "Northern Leaf Blight",
+      "pathogen": "Exserohilum turcicum",
+      "severity": "high",
+      "yield_loss": "30-50%",
+      "symptoms": ["Long cigar-shaped grey-green lesions", "Lesions start from lower leaves", "Leaves dry and die"],
+      "treatment": [
+        {"chemical": "Mancozeb 75% WP", "dosage": "2.5g/L", "approved_by": "ICAR", "phi_days": 21},
+        {"chemical": "Propiconazole 25% EC", "dosage": "1ml/L", "approved_by": "CIB&RC", "phi_days": 30}
+      ],
+      "prevention": ["Resistant varieties", "Crop rotation", "Remove plant debris", "Proper spacing"],
+      "indian_varieties_resistant": ["HQPM-1", "DHM-117", "Vivek QPM-9"]
+    }
+  }
+}

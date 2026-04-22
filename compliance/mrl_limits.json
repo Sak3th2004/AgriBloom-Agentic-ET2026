@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "source": "FSSAI - Food Safety and Standards (Contaminants, Toxins and Residues) Regulations",
+    "last_updated": "2026-04-22",
+    "unit": "mg/kg (ppm)"
+  },
+  "mrl_limits": {
+    "carbendazim": {
+      "default": 0.5,
+      "rice": 1.0,
+      "wheat": 0.5,
+      "tomato": 0.5,
+      "potato": 0.1,
+      "sugarcane": 0.1,
+      "grapes": 0.5,
+      "mango": 2.0,
+      "apple": 0.5,
+      "pre_harvest_interval_days": 14
+    },
+    "mancozeb": {
+      "default": 3.0,
+      "tomato": 3.0,
+      "potato": 3.0,
+      "grape": 5.0,
+      "apple": 5.0,
+      "rice": 1.0,
+      "wheat": 1.0,
+      "banana": 2.0,
+      "pre_harvest_interval_days": 21
+    },
+    "propiconazole": {
+      "default": 0.1,
+      "rice": 0.1,
+      "wheat": 0.1,
+      "maize": 0.05,
+      "sugarcane": 0.05,
+      "pre_harvest_interval_days": 30
+    },
+    "chlorpyriphos": {
+      "default": 0.2,
+      "rice": 0.05,
+      "wheat": 0.2,
+      "maize": 0.05,
+      "cotton": 0.2,
+      "pre_harvest_interval_days": 21
+    },
+    "imidacloprid": {
+      "default": 0.5,
+      "rice": 0.05,
+      "cotton": 0.5,
+      "tomato": 0.5,
+      "okra": 0.5,
+      "chilli": 0.5,
+      "pre_harvest_interval_days": 14
+    },
+    "cypermethrin": {
+      "default": 0.5,
+      "rice": 0.05,
+      "wheat": 0.5,
+      "cotton": 0.5,
+      "tomato": 0.5,
+      "okra": 0.2,
+      "pre_harvest_interval_days": 7
+    },
+    "tricyclazole": {
+      "default": 0.3,
+      "rice": 0.3,
+      "pre_harvest_interval_days": 21
+    },
+    "metalaxyl": {
+      "default": 0.5,
+      "tomato": 0.5,
+      "potato": 0.5,
+      "grape": 1.0,
+      "pre_harvest_interval_days": 14
+    },
+    "copper_oxychloride": {
+      "default": 20.0,
+      "tomato": 20.0,
+      "potato": 20.0,
+      "grape": 20.0,
+      "citrus": 20.0,
+      "pre_harvest_interval_days": 7
+    },
+    "abamectin": {
+      "default": 0.01,
+      "tomato": 0.02,
+      "cotton": 0.02,
+      "chilli": 0.01,
+      "pre_harvest_interval_days": 7
+    },
+    "thiamethoxam": {
+      "default": 0.3,
+      "rice": 0.3,
+      "cotton": 0.02,
+      "tomato": 0.2,
+      "pre_harvest_interval_days": 14
+    },
+    "hexaconazole": {
+      "default": 0.1,
+      "rice": 0.1,
+      "mango": 0.1,
+      "groundnut": 0.05,
+      "pre_harvest_interval_days": 30
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "AgriBloom",
+    "slug": "agribloom-farmer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2d7d2d"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.agribloom.farmer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2d7d2d"
+      },
+      "package": "com.agribloom.farmer"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow AgriBloom to access camera for disease detection."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow AgriBloom to access photos for disease detection.",
+          "cameraPermission": "Allow AgriBloom to access camera."
+        }
+      ]
+    ]
+  }
+}

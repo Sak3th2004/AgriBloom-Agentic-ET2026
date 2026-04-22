@@ -1,0 +1,4 @@
+,maize_healthy,potato_late_blight,tomato_early_blight
+maize_healthy,1,0,0
+potato_late_blight,0,1,0
+tomato_early_blight,0,0,1

@@ -1,0 +1,518 @@
+"""
+AgriBloom Agentic - Premium Farmer-Friendly Gradio UI
+Clean, Simple, Multilingual — Every feature working
+"""
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Any, Callable
+
+import gradio as gr
+from PIL import Image
+
+logger = logging.getLogger(__name__)
+
+# ── Language Configuration ───────────────────────────────────────────────────
+LANGUAGE_MAP = {
+    "English": "en",
+    "Hindi (हिंदी)": "hi",
+    "Kannada (ಕನ್ನಡ)": "kn",
+    "Telugu (తెలుగు)": "te",
+    "Tamil (தமிழ்)": "ta",
+    "Punjabi (ਪੰਜਾਬੀ)": "pa",
+    "Gujarati (ગુજરાતી)": "gu",
+    "Marathi (मराठी)": "mr",
+    "Bengali (বাংলা)": "bn",
+    "Odia (ଓଡ଼ିଆ)": "or",
+}
+
+# UI labels in each language
+UI_LABELS = {
+    "en": {
+        "title": "🌾 AgriBloom — AI Advisory for Farmers",
+        "subtitle": "Upload crop photo → Get disease diagnosis + treatment in your language",
+        "upload": "📷 Take Photo or Upload Crop Leaf",
+        "describe": "📝 Describe Problem (Optional)",
+        "placeholder": "Example: My tomato leaves have brown spots...",
+        "language": "🌐 Your Language",
+        "state": "State",
+        "district": "District",
+        "offline": "📶 Offline Mode (No Internet)",
+        "submit": "🌾 GET ADVICE",
+        "result": "🌾 Diagnosis & Treatment",
+        "listen": "🔊 Listen to Advice",
+        "report": "📄 Download Report",
+        "followup": "💬 Ask Follow-up Question",
+        "followup_placeholder": "Ask anything about the treatment...",
+        "followup_btn": "Ask",
+        "calendar": "📅 Crop Calendar",
+        "status_ready": "✅ Ready! Upload a crop photo to get advice.",
+    },
+    "hi": {
+        "title": "🌾 एग्रीब्लूम — किसानों के लिए AI सलाहकार",
+        "subtitle": "फसल की फोटो अपलोड करें → अपनी भाषा में रोग निदान + उपचार पाएं",
+        "upload": "📷 फोटो लें या अपलोड करें",
+        "describe": "📝 समस्या बताएं (वैकल्पिक)",
+        "placeholder": "उदाहरण: मेरे टमाटर की पत्तियां पीली हो रही हैं...",
+        "language": "🌐 आपकी भाषा",
+        "state": "राज्य",
+        "district": "जिला",
+        "offline": "📶 ऑफलाइन मोड (बिना इंटरनेट)",
+        "submit": "🌾 सलाह लें",
+        "result": "🌾 रोग और उपचार",
+        "listen": "🔊 सलाह सुनें",
+        "report": "📄 रिपोर्ट डाउनलोड",
+        "followup": "💬 और पूछें",
+        "followup_placeholder": "उपचार के बारे में कुछ भी पूछें...",
+        "followup_btn": "पूछें",
+        "calendar": "📅 फसल कैलेंडर",
+        "status_ready": "✅ तैयार! सलाह पाने के लिए फसल की फोटो अपलोड करें।",
+    },
+    "kn": {
+        "title": "🌾 ಅಗ್ರಿಬ್ಲೂಮ್ — ರೈತರಿಗೆ AI ಸಲಹೆಗಾರ",
+        "subtitle": "ಬೆಳೆ ಫೋಟೋ ಅಪ್‌ಲೋಡ್ → ನಿಮ್ಮ ಭಾಷೆಯಲ್ಲಿ ರೋಗ ನಿರ್ಣಯ + ಚಿಕಿತ್ಸೆ",
+        "upload": "📷 ಫೋಟೋ ತೆಗೆಯಿರಿ ಅಥವಾ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+        "describe": "📝 ಸಮಸ್ಯೆ ವಿವರಿಸಿ (ಐಚ್ಛಿಕ)",
+        "placeholder": "ಉದಾ: ನನ್ನ ಟೊಮ್ಯಾಟೊ ಎಲೆಗಳು ಹಳದಿ ಆಗುತ್ತಿವೆ...",
+        "language": "🌐 ನಿಮ್ಮ ಭಾಷೆ",
+        "state": "ರಾಜ್ಯ",
+        "district": "ಜಿಲ್ಲೆ",
+        "offline": "📶 ಆಫ್‌ಲೈನ್ ಮೋಡ್",
+        "submit": "🌾 ಸಲಹೆ ಪಡೆಯಿರಿ",
+        "result": "🌾 ರೋಗ ಮತ್ತು ಚಿಕಿತ್ಸೆ",
+        "listen": "🔊 ಸಲಹೆ ಕೇಳಿ",
+        "report": "📄 ವರದಿ ಡೌನ್‌ಲೋಡ್",
+        "followup": "💬 ಇನ್ನಷ್ಟು ಕೇಳಿ",
+        "followup_placeholder": "ಚಿಕಿತ್ಸೆ ಬಗ್ಗೆ ಏನಾದರೂ ಕೇಳಿ...",
+        "followup_btn": "ಕೇಳಿ",
+        "calendar": "📅 ಬೆಳೆ ಕ್ಯಾಲೆಂಡರ್",
+        "status_ready": "✅ ಸಿದ್ಧ! ಸಲಹೆ ಪಡೆಯಲು ಬೆಳೆ ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
+    },
+    "te": {
+        "title": "🌾 అగ్రిబ్లూమ్ — రైతులకు AI సలహాదారు",
+        "subtitle": "పంట ఫోటో అప్‌లోడ్ → మీ భాషలో వ్యాధి నిర్ధారణ + చికిత్స",
+        "upload": "📷 ఫోటో తీయండి లేదా అప్‌లోడ్ చేయండి",
+        "describe": "📝 సమస్య వివరించండి",
+        "placeholder": "ఉదా: నా టమాటా ఆకులు పసుపు రంగులోకి మారుతున్నాయి...",
+        "language": "🌐 మీ భాష", "state": "రాష్ట్రం", "district": "జిల్లా",
+        "offline": "📶 ఆఫ్‌లైన్ మోడ్", "submit": "🌾 సలహా పొందండి",
+        "result": "🌾 వ్యాధి & చికిత్స", "listen": "🔊 సలహా వినండి",
+        "report": "📄 రిపోర్ట్", "followup": "💬 మరింత అడగండి",
+        "followup_placeholder": "చికిత్స గురించి అడగండి...", "followup_btn": "అడగండి",
+        "calendar": "📅 పంట క్యాలెండర్",
+        "status_ready": "✅ సిద్ధం! సలహా కోసం పంట ఫోటో అప్‌లోడ్ చేయండి.",
+    },
+    "ta": {
+        "title": "🌾 அக்ரிப்ளூம் — விவசாயிகளுக்கு AI ஆலோசகர்",
+        "subtitle": "பயிர் புகைப்படம் பதிவேற்றம் → உங்கள் மொழியில் நோய் கண்டறிதல் + சிகிச்சை",
+        "upload": "📷 புகைப்படம் எடுக்கவும்",
+        "describe": "📝 பிரச்சனையை விவரிக்கவும்",
+        "placeholder": "எ.கா: என் தக்காளி இலைகள் மஞ்சள் நிறமாக...",
+        "language": "🌐 உங்கள் மொழி", "state": "மாநிலம்", "district": "மாவட்டம்",
+        "offline": "📶 ஆஃப்லைன்", "submit": "🌾 ஆலோசனை பெறுங்கள்",
+        "result": "🌾 நோய் & சிகிச்சை", "listen": "🔊 ஆலோசனை கேளுங்கள்",
+        "report": "📄 அறிக்கை", "followup": "💬 மேலும் கேளுங்கள்",
+        "followup_placeholder": "சிகிச்சை பற்றி கேளுங்கள்...", "followup_btn": "கேளுங்கள்",
+        "calendar": "📅 பயிர் காலண்டர்",
+        "status_ready": "✅ தயார்! ஆலோசனைக்கு பயிர் புகைப்படம் பதிவேற்றவும்.",
+    },
+}
+
+# Fall back to English for languages without full UI translation
+for code in ["pa", "gu", "mr", "bn", "or"]:
+    UI_LABELS[code] = UI_LABELS["en"].copy()
+
+# ── Location Data ────────────────────────────────────────────────────────────
+INDIAN_LOCATIONS = {
+    "Karnataka": ["Bengaluru", "Mysuru", "Davangere", "Belgaum", "Hubli", "Mangaluru", "Tumkur", "Shimoga"],
+    "Andhra Pradesh": ["Vijayawada", "Guntur", "Visakhapatnam", "Tirupati", "Kurnool", "Nellore"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Thanjavur"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Kolhapur"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+    "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Bikaner"],
+    "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur", "Ujjain"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Allahabad"],
+    "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur"],
+    "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Siliguri"],
+    "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Berhampur"],
+    "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur"],
+}
+
+DISTRICT_COORDS = {
+    "Bengaluru": (12.97, 77.59), "Mysuru": (12.30, 76.64), "Davangere": (14.46, 75.92),
+    "Belgaum": (15.85, 74.50), "Hubli": (15.36, 75.12), "Mangaluru": (12.91, 74.86),
+    "Vijayawada": (16.51, 80.65), "Guntur": (16.31, 80.44), "Visakhapatnam": (17.69, 83.22),
+    "Hyderabad": (17.39, 78.49), "Warangal": (17.97, 79.59), "Chennai": (13.08, 80.27),
+    "Coimbatore": (11.02, 76.96), "Madurai": (9.93, 78.12), "Pune": (18.52, 73.86),
+    "Nagpur": (21.15, 79.09), "Ahmedabad": (23.02, 72.57), "Surat": (21.17, 72.83),
+    "Ludhiana": (30.90, 75.86), "Amritsar": (31.63, 74.87), "Jaipur": (26.91, 75.79),
+    "Lucknow": (26.85, 80.95), "Patna": (25.59, 85.14), "Kolkata": (22.57, 88.36),
+    "Bhubaneswar": (20.30, 85.82), "Kochi": (9.93, 76.27),
+}
+
+
+def _get_coords(district: str) -> tuple:
+    return DISTRICT_COORDS.get(district, (14.46, 75.92))
+
+
+def _get_labels(lang_code: str) -> dict:
+    return UI_LABELS.get(lang_code, UI_LABELS["en"])
+
+
+# ── Seasonal Warning ────────────────────────────────────────────────────────
+def _get_seasonal_info(lang_code: str) -> str:
+    """Get current seasonal crop advisory."""
+    try:
+        from utils.crop_calendar import get_current_season, CROP_CALENDAR
+        season = get_current_season()
+        season_name = {"kharif": "Kharif (Monsoon)", "rabi": "Rabi (Winter)", "spring": "Spring"}.get(season, season)
+
+        crops_this_season = []
+        for crop, seasons in CROP_CALENDAR.items():
+            if season in seasons:
+                info = seasons[season]
+                risks = ", ".join(info.get("diseases_peak", [])[:2])
+                crops_this_season.append(f"**{crop.title()}**: Sow {info['sowing']} | ⚠️ {risks}")
+
+        if crops_this_season:
+            header = f"### 📅 Current Season: {season_name}\n"
+            return header + "\n".join([f"- {c}" for c in crops_this_season[:6]])
+        return ""
+    except Exception:
+        return ""
+
+
+# ── Main UI ──────────────────────────────────────────────────────────────────
+def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
+    """Launch the AgriBloom Gradio app."""
+
+    # Conversation state
+    conversation_history = []
+
+    custom_css = """
+    .main-header {
+        background: linear-gradient(135deg, #052e16 0%, #166534 50%, #14532d 100%);
+        border-radius: 16px; padding: 32px; margin-bottom: 16px;
+        text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .main-header h1 { font-size: 2.2em; margin: 0; font-weight: 700; }
+    .main-header p { opacity: 0.85; margin-top: 8px; font-size: 1.1em; }
+    .feature-badges { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+    .feature-badges span {
+        background: rgba(255,255,255,0.15); padding: 4px 14px; border-radius: 20px;
+        font-size: 0.85em; backdrop-filter: blur(4px);
+    }
+    .green-card {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border: 1px solid #86efac; border-radius: 12px; padding: 16px;
+    }
+    .submit-btn {
+        background: linear-gradient(135deg, #166534, #14532d) !important;
+        color: white !important; font-weight: 700 !important; font-size: 1.1em !important;
+        padding: 14px !important; border-radius: 10px !important; border: none !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+    }
+    .submit-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(22,101,52,0.4) !important;
+    }
+    .footer {
+        text-align: center; padding: 12px; margin-top: 16px;
+        background: #f0fdf4; border-radius: 12px; color: #166534; font-size: 0.9em;
+    }
+    """
+
+    with gr.Blocks(
+        title="AgriBloom Agentic — AI for Indian Farmers",
+        css=custom_css,
+        theme=gr.themes.Soft(primary_hue="green", secondary_hue="emerald", neutral_hue="slate"),
+    ) as demo:
+
+        # ── Header ──────────────────────────────────────────────────────
+        header_html = gr.HTML("""
+        <div class="main-header">
+            <h1>🌾 AgriBloom Agentic</h1>
+            <p>AI Advisory for Indian Farmers — Upload crop photo, get treatment in your language</p>
+            <div class="feature-badges">
+                <span>🔬 92-Class Disease AI</span>
+                <span>🛡️ CIB&RC Compliance</span>
+                <span>🌍 10 Languages</span>
+                <span>📶 Offline Ready</span>
+                <span>🧠 Gemini GenAI</span>
+                <span>📚 ICAR Knowledge</span>
+            </div>
+        </div>
+        """)
+
+        with gr.Row(equal_height=False):
+            # ── LEFT: Inputs ─────────────────────────────────────────────
+            with gr.Column(scale=5):
+                # Language selector — TOP, prominent
+                language = gr.Dropdown(
+                    choices=list(LANGUAGE_MAP.keys()),
+                    value="English",
+                    label="🌐 Select Your Language / अपनी भाषा चुनें / ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ",
+                    interactive=True,
+                )
+
+                image_input = gr.Image(
+                    type="pil",
+                    label="📷 Take Photo or Upload Crop Leaf",
+                    height=260,
+                    sources=["upload", "webcam"],
+                )
+
+                text_input = gr.Textbox(
+                    lines=2,
+                    label="📝 Describe Problem (Optional)",
+                    placeholder="Example: My tomato leaves have brown spots...",
+                )
+
+                with gr.Row():
+                    state_input = gr.Dropdown(
+                        choices=list(INDIAN_LOCATIONS.keys()),
+                        value="Karnataka", label="📍 State",
+                    )
+                    district_input = gr.Dropdown(
+                        choices=INDIAN_LOCATIONS["Karnataka"],
+                        value="Davangere", label="📍 District",
+                    )
+
+                offline_mode = gr.Checkbox(value=False, label="📶 Offline Mode (No Internet)")
+
+                submit_btn = gr.Button(
+                    "🌾 GET ADVICE",
+                    variant="primary", size="lg",
+                    elem_classes=["submit-btn"],
+                )
+
+            # ── RIGHT: Results ───────────────────────────────────────────
+            with gr.Column(scale=5):
+                response_output = gr.Textbox(
+                    lines=14,
+                    label="🌾 Diagnosis & Treatment",
+                    show_copy_button=True,
+                )
+
+                voice_output = gr.Audio(label="🔊 Listen to Advice", type="filepath")
+
+                with gr.Accordion("💬 Ask Follow-up Question", open=False):
+                    followup_input = gr.Textbox(
+                        lines=1, label="Your question",
+                        placeholder="Ask anything about the treatment...",
+                    )
+                    followup_btn = gr.Button("Ask", size="sm")
+                    followup_output = gr.Textbox(lines=4, label="Answer", interactive=False)
+
+                with gr.Row():
+                    bloom_plot = gr.Plot(label="📊 Confidence")
+                    audit_file = gr.File(label="📄 Report PDF")
+
+                status_output = gr.Markdown("✅ *Ready! Upload a crop photo to get advice.*")
+
+        # ── Extra Feature Tabs ───────────────────────────────────────────
+        with gr.Row():
+            with gr.Column(scale=1):
+                with gr.Accordion("🧪 Fertilizer Calculator", open=False):
+                    gr.Markdown("*Calculate exact fertilizer for your crop and area*")
+                    fert_crop = gr.Dropdown(
+                        choices=["Rice", "Wheat", "Cotton", "Maize", "Sugarcane", "Tomato",
+                                 "Potato", "Ragi", "Groundnut", "Soybean", "Pepper", "Apple", "Grape"],
+                        value="Rice", label="Crop",
+                    )
+                    fert_area = gr.Number(value=1.0, label="Area (acres)", minimum=0.1, maximum=100)
+                    fert_soil = gr.Radio(
+                        choices=["low_fertility", "medium", "high_fertility"],
+                        value="medium", label="Soil Type",
+                    )
+                    fert_btn = gr.Button("🧪 Calculate", size="sm")
+                    fert_output = gr.Markdown("")
+
+            with gr.Column(scale=1):
+                with gr.Accordion("📅 Current Season Advisory", open=False):
+                    seasonal_info = gr.Markdown(_get_seasonal_info("en"))
+
+                with gr.Accordion("📞 Helplines & Nearest KVK", open=False):
+                    helpline_output = gr.Markdown(
+                        "## 📞 Kisan Call Center: `1800-180-1551` (Free, 24x7)\n"
+                        "## 🏛️ PM-KISAN: `155261`\n"
+                        "## 🌾 Crop Insurance: `1800-200-7710`\n\n"
+                        "*Select your state above to find nearest KVK*"
+                    )
+
+        # ── Footer ───────────────────────────────────────────────────────
+        gr.HTML("""
+        <div class="footer">
+            <b>🌾 AgriBloom Agentic</b> — ET AI Hackathon 2026 |
+            92-Class Disease AI • CIB&RC Compliance • 10 Languages • Offline Ready |
+            Helpline: 1800-180-1551
+        </div>
+        """)
+
+        # ── Hidden state ─────────────────────────────────────────────────
+        chat_state = gr.State([])  # conversation history
+
+        # ── Event Handlers ───────────────────────────────────────────────
+        def update_districts(state):
+            districts = INDIAN_LOCATIONS.get(state, ["Select"])
+            return gr.Dropdown(choices=districts, value=districts[0])
+
+        def update_ui_labels(language_name):
+            """Update UI labels when language changes."""
+            lang_code = LANGUAGE_MAP.get(language_name, "en")
+            labels = _get_labels(lang_code)
+            seasonal = _get_seasonal_info(lang_code)
+            return (
+                gr.update(label=labels["upload"]),
+                gr.update(label=labels["describe"], placeholder=labels["placeholder"]),
+                gr.update(label=labels["result"]),
+                gr.update(label=labels["listen"]),
+                gr.update(value=labels["status_ready"]),
+                seasonal,
+            )
+
+        def process_query(image, text_value, language_name, state, district, offline, history):
+            """Run the full agent pipeline."""
+            lang_code = LANGUAGE_MAP.get(language_name, "en")
+            lat, lon = _get_coords(district)
+
+            try:
+                result = run_pipeline(
+                    image=image,
+                    image_path="",
+                    user_text=text_value or "",
+                    user_language=lang_code,
+                    lang=lang_code,
+                    offline=bool(offline),
+                    lat=float(lat),
+                    lon=float(lon),
+                )
+
+                conf = result.get("disease_prediction", {}).get("confidence", 0)
+                source = result.get("disease_prediction", {}).get("source", "")
+                crop = result.get("crop_type", "unknown")
+                tier = "🧠 Gemini Vision" if "gemini" in source else "🔬 EfficientNet-B4"
+
+                status = (
+                    f"✅ **Analysis Complete!** | Confidence: {conf*100:.0f}% | "
+                    f"Crop: {crop.title()} | Engine: {tier}"
+                )
+
+                # Update conversation history
+                new_history = list(history) if history else []
+                new_history.append({"role": "system", "content": result.get("final_response", "")})
+
+                return (
+                    result.get("final_response", "No response generated."),
+                    result.get("voice_output_path"),
+                    result.get("bloom_figure"),
+                    result.get("audit_pdf_path"),
+                    status,
+                    new_history,
+                )
+            except Exception as e:
+                logger.error(f"Pipeline error: {e}", exc_info=True)
+                return (
+                    f"Error: {str(e)}",
+                    None, None, None,
+                    f"❌ **Error**: {str(e)}",
+                    history or [],
+                )
+
+        def handle_followup(question, language_name, history):
+            """Handle follow-up questions using Gemini."""
+            if not question or not question.strip():
+                return "Please type a question."
+
+            lang_code = LANGUAGE_MAP.get(language_name, "en")
+            try:
+                from utils.genai_handler import conversational_followup, is_genai_available
+                if not is_genai_available():
+                    return "GenAI not available. Please check internet connection."
+
+                # Extract context from history
+                crop = ""
+                disease = ""
+                if history:
+                    last = history[-1].get("content", "")
+                    crop = last[:50]
+
+                answer = conversational_followup(
+                    question=question,
+                    conversation_history=history or [],
+                    crop=crop,
+                    disease=disease,
+                    language=lang_code,
+                )
+                return answer
+            except Exception as e:
+                return f"Error: {str(e)}"
+
+        # ── Connect Events ───────────────────────────────────────────────
+        state_input.change(fn=update_districts, inputs=[state_input], outputs=[district_input])
+
+        language.change(
+            fn=update_ui_labels,
+            inputs=[language],
+            outputs=[image_input, text_input, response_output, voice_output, status_output, seasonal_info],
+        )
+
+        submit_btn.click(
+            fn=process_query,
+            inputs=[image_input, text_input, language, state_input, district_input, offline_mode, chat_state],
+            outputs=[response_output, voice_output, bloom_plot, audit_file, status_output, chat_state],
+            show_progress="full",
+        )
+
+        followup_btn.click(
+            fn=handle_followup,
+            inputs=[followup_input, language, chat_state],
+            outputs=[followup_output],
+        )
+
+        # Fertilizer calculator
+        def calc_fertilizer(crop_name, area, soil):
+            try:
+                from utils.fertilizer_calc import format_fertilizer_card
+                return format_fertilizer_card(crop_name.lower(), float(area), soil)
+            except Exception as e:
+                return f"Error: {str(e)}"
+
+        fert_btn.click(
+            fn=calc_fertilizer,
+            inputs=[fert_crop, fert_area, fert_soil],
+            outputs=[fert_output],
+        )
+
+        # Update helpline when state changes
+        def update_helpline(state_name, language_name):
+            try:
+                from utils.helpline import format_helpline_card
+                lang_code = LANGUAGE_MAP.get(language_name, "en")
+                return format_helpline_card(state_name, "", lang_code)
+            except Exception as e:
+                return f"📞 Kisan Call Center: `1800-180-1551` (Free, 24x7)"
+
+        state_input.change(
+            fn=update_helpline,
+            inputs=[state_input, language],
+            outputs=[helpline_output],
+        )
+
+    # Launch
+    logger.info("Launching AgriBloom UI on http://0.0.0.0:7860")
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        show_error=True,
+    )
+
+
+if __name__ == "__main__":
+    def mock_pipeline(**kwargs):
+        return {"final_response": "Test response", "status": "output_complete"}
+    launch_app(mock_pipeline)

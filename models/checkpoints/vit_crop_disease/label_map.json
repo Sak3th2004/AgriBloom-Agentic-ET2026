@@ -1,0 +1,23 @@
+{
+  "labels": [
+    "apple_black_rot", "apple_cedar_apple_rust", "apple_healthy", "apple_scab",
+    "blueberry_healthy", "cherry_(including_sour)_healthy", "cherry_(including_sour)_powdery_mildew",
+    "grape_black_rot", "grape_esca_(black_measles)", "grape_healthy", "grape_leaf_blight_(isariopsis_leaf_spot)",
+    "maize_(maize)_cercospora_leaf_spot_gray_leaf_spot", "maize_(maize)_common_rust_", "maize_(maize)_healthy", "maize_(maize)_northern_leaf_blight",
+    "orange_haunglongbing_(citrus_greening)",
+    "peach_bacterial_spot", "peach_healthy",
+    "pepper,_bell_bacterial_spot", "pepper,_bell_healthy", "pepper_bell",
+    "potato__early_blight", "potato__healthy", "potato__late_blight", "potato_early_blight", "potato_healthy", "potato_late_blight",
+    "ragi_blast", "ragi_healthy", "ragi_rust",
+    "raspberry_healthy",
+    "rice_leaf_aug",
+    "soybean_healthy",
+    "squash_powdery_mildew",
+    "strawberry_healthy", "strawberry_leaf_scorch",
+    "sugarcane_healthy", "sugarcane_mosaic", "sugarcane_redrot", "sugarcane_rust", "sugarcane_yellow",
+    "tomato_bacterial_spot", "tomato_early_blight", "tomato_healthy", "tomato_late_blight", "tomato_leaf_mold",
+    "tomato_mosaic_virus", "tomato_septoria_leaf_spot", "tomato_spider_mites_two_spotted_spider_mite", "tomato_target_spot",
+    "tomato_yellow_leaf_curl_virus", "tomato_yellowleaf",
+    "wheat_healthy", "wheat_yellow_rust"
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "source": "ICAR-NBAIR, KVK recommendations, ICAR-IIHR Bengaluru",
+    "last_updated": "2026-04-22"
+  },
+  "alternatives": {
+    "endosulfan": {
+      "safe_alternatives": [
+        {"name": "Neem oil 5% spray", "type": "botanical", "dosage": "5ml/L water", "source": "ICAR-NBAIR"},
+        {"name": "Trichoderma viride", "type": "biocontrol", "dosage": "5g/L soil drench", "source": "ICAR-NBAIR"},
+        {"name": "Beauveria bassiana", "type": "biocontrol", "dosage": "5g/L spray", "source": "ICAR-NBAIR"},
+        {"name": "Imidacloprid 17.8% SL", "type": "chemical_safe", "dosage": "0.3ml/L", "source": "CIB&RC approved"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "monocrotophos": {
+      "safe_alternatives": [
+        {"name": "Neem oil 5%", "type": "botanical", "dosage": "5ml/L water", "source": "ICAR-NBAIR"},
+        {"name": "Thiamethoxam 25% WG", "type": "chemical_safe", "dosage": "0.3g/L", "source": "CIB&RC approved"},
+        {"name": "Spinosad 45% SC", "type": "chemical_safe", "dosage": "0.3ml/L", "source": "CIB&RC approved"},
+        {"name": "Trichogramma parasitoid release", "type": "biocontrol", "dosage": "50,000/acre", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "methyl_parathion": {
+      "safe_alternatives": [
+        {"name": "Lambda-cyhalothrin 5% EC", "type": "chemical_safe", "dosage": "0.5ml/L", "source": "CIB&RC approved"},
+        {"name": "Chlorantraniliprole 18.5% SC", "type": "chemical_safe", "dosage": "0.3ml/L", "source": "CIB&RC approved"},
+        {"name": "Bacillus thuringiensis (Bt)", "type": "biocontrol", "dosage": "2g/L", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "phorate": {
+      "safe_alternatives": [
+        {"name": "Fipronil 5% SC", "type": "chemical_safe", "dosage": "1.5ml/L", "source": "CIB&RC approved"},
+        {"name": "Cartap hydrochloride 4G", "type": "chemical_safe", "dosage": "20kg/ha soil", "source": "CIB&RC approved"},
+        {"name": "Metarhizium anisopliae", "type": "biocontrol", "dosage": "5g/L", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "dichlorvos": {
+      "safe_alternatives": [
+        {"name": "Pyrethrin extract", "type": "botanical", "dosage": "2ml/L", "source": "ICAR"},
+        {"name": "Spinosad 45% SC", "type": "chemical_safe", "dosage": "0.3ml/L", "source": "CIB&RC approved"},
+        {"name": "Pheromone traps", "type": "mechanical", "dosage": "5 traps/acre", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "triazophos": {
+      "safe_alternatives": [
+        {"name": "Profenofos 50% EC", "type": "chemical_safe", "dosage": "2ml/L", "source": "CIB&RC approved"},
+        {"name": "Flubendiamide 39.35% SC", "type": "chemical_safe", "dosage": "0.2ml/L", "source": "CIB&RC approved"},
+        {"name": "NPV (Nuclear Polyhedrosis Virus)", "type": "biocontrol", "dosage": "250 LE/ha", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "chlorpyriphos_restricted": {
+      "safe_alternatives": [
+        {"name": "Neem seed kernel extract 5%", "type": "botanical", "dosage": "50g/L", "source": "ICAR"},
+        {"name": "Thiamethoxam 25% WG", "type": "chemical_safe", "dosage": "0.3g/L", "source": "CIB&RC approved"},
+        {"name": "Verticillium lecanii", "type": "biocontrol", "dosage": "5g/L", "source": "ICAR-NBAIR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "carbofuran": {
+      "safe_alternatives": [
+        {"name": "Fipronil 0.3% GR", "type": "chemical_safe", "dosage": "20kg/ha", "source": "CIB&RC approved"},
+        {"name": "Pseudomonas fluorescens", "type": "biocontrol", "dosage": "10g/L seed treatment", "source": "ICAR-NBAIR"},
+        {"name": "Neem cake", "type": "botanical", "dosage": "250kg/ha soil", "source": "ICAR"}
+      ],
+      "helpline": "1800-180-1551"
+    },
+    "default": {
+      "safe_alternatives": [
+        {"name": "Neem oil 5%", "type": "botanical", "dosage": "5ml/L", "source": "ICAR-NBAIR"},
+        {"name": "Trichoderma harzianum", "type": "biocontrol", "dosage": "5g/L", "source": "ICAR-NBAIR"},
+        {"name": "Pseudomonas fluorescens", "type": "biocontrol", "dosage": "10g/L", "source": "ICAR-NBAIR"},
+        {"name": "Panchagavya spray 3%", "type": "organic", "dosage": "30ml/L", "source": "Traditional practice"}
+      ],
+      "helpline": "1800-180-1551"
+    }
+  },
+  "organic_ipm_general": [
+    {"name": "Neem oil extract (Azadirachtin)", "use": "Broad-spectrum insecticide + fungicide", "dosage": "5ml/L water", "approved_by": "ICAR-NBAIR"},
+    {"name": "Trichoderma viride", "use": "Soil-borne fungal diseases", "dosage": "5g/L soil drench", "approved_by": "ICAR-NBAIR"},
+    {"name": "Trichoderma harzianum", "use": "Root rot, wilt diseases", "dosage": "5g/L", "approved_by": "ICAR-NBAIR"},
+    {"name": "Pseudomonas fluorescens", "use": "Bacterial diseases, growth promotion", "dosage": "10g/L", "approved_by": "ICAR-NBAIR"},
+    {"name": "Bacillus subtilis", "use": "Fungal foliar diseases", "dosage": "5g/L", "approved_by": "ICAR-NBAIR"},
+    {"name": "Beauveria bassiana", "use": "Insect pest control", "dosage": "5g/L", "approved_by": "ICAR-NBAIR"},
+    {"name": "Metarhizium anisopliae", "use": "Soil pests, borers", "dosage": "5g/L", "approved_by": "ICAR-NBAIR"},
+    {"name": "Bordeaux mixture", "use": "Fungal diseases (copper fungicide)", "dosage": "1% solution", "approved_by": "ICAR"},
+    {"name": "Cow urine spray (Jeevamrutha)", "use": "Growth promoter + mild pesticide", "dosage": "200L/acre", "approved_by": "Traditional organic"}
+  ]
+}
