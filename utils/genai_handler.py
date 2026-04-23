@@ -74,34 +74,44 @@ def _get_gemini_model():
 
 
 def _generate(prompt: str, image=None) -> str:
-    """Unified Gemini API call — works with both new and old SDK."""
+    """Unified Gemini API call — works with both new and old SDK. Auto-retries on rate limit."""
     _get_gemini_model()  # Ensure availability check ran
     if _GEMINI_AVAILABLE is not True:
         return ""
 
-    try:
-        if _GEMINI_SDK == "new":
-            # ALWAYS create fresh client to avoid "client closed" errors
-            from google import genai as genai_new
-            fresh_client = genai_new.Client(api_key=_API_KEY)
-            contents = [prompt]
-            if image is not None:
-                contents = [image, prompt]
-            response = fresh_client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=contents,
-            )
-            return response.text.strip()
-        else:
-            # Old SDK: model.generate_content(prompt)
-            if image is not None:
-                response = _GEMINI_CLIENT.generate_content([image, prompt])
+    import time
+
+    for attempt in range(2):  # Try twice max
+        try:
+            if _GEMINI_SDK == "new":
+                # ALWAYS create fresh client to avoid "client closed" errors
+                from google import genai as genai_new
+                fresh_client = genai_new.Client(api_key=_API_KEY)
+                contents = [prompt]
+                if image is not None:
+                    contents = [image, prompt]
+                response = fresh_client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=contents,
+                )
+                return response.text.strip()
             else:
-                response = _GEMINI_CLIENT.generate_content(prompt)
-            return response.text.strip()
-    except Exception as e:
-        logger.error(f"Gemini API call failed: {e}")
-        return ""
+                # Old SDK: model.generate_content(prompt)
+                if image is not None:
+                    response = _GEMINI_CLIENT.generate_content([image, prompt])
+                else:
+                    response = _GEMINI_CLIENT.generate_content(prompt)
+                return response.text.strip()
+        except Exception as e:
+            error_str = str(e)
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                if attempt == 0:
+                    logger.warning("Rate limited — waiting 15s and retrying...")
+                    time.sleep(15)
+                    continue
+            logger.error(f"Gemini API call failed: {e}")
+            return ""
+    return ""
 
 
 def is_genai_available() -> bool:

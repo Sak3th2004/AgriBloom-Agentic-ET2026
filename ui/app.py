@@ -346,6 +346,11 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                         value="Davangere", label="📍 District",
                     )
 
+                # Hidden textbox to receive JS geolocation result
+                geo_result = gr.Textbox(visible=False, elem_id="geo_result")
+                detect_btn = gr.Button("📍 Auto-Detect My Location", size="sm", variant="secondary")
+                location_status = gr.Markdown("", elem_id="location_status")
+
                 offline_mode = gr.Checkbox(value=False, label="📶 Offline Mode (No Internet)")
 
                 # Farmer Instructions
@@ -561,6 +566,78 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             fn=update_ui_labels,
             inputs=[language],
             outputs=[image_input, text_input, response_output, voice_output, status_output, seasonal_info, farmer_instructions],
+        )
+
+        # ── Geolocation Detection ─────────────────────────────────────────
+        def detect_location_from_coords(geo_text):
+            """Reverse geocode lat/lon to nearest Indian state/district."""
+            if not geo_text or "," not in geo_text:
+                return gr.update(), gr.update(), gr.update(), "❌ Could not detect location"
+            try:
+                lat, lon = geo_text.strip().split(",")
+                lat, lon = float(lat), float(lon)
+
+                # Reverse geocode using Nominatim (free, no API key)
+                import urllib.request, json
+                url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&addressdetails=1"
+                req = urllib.request.Request(url, headers={"User-Agent": "AgriBloom/1.0"})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    data = json.loads(resp.read().decode())
+
+                address = data.get("address", {})
+                state = address.get("state", "")
+                district = address.get("state_district", "") or address.get("county", "")
+
+                # Match to our location list
+                matched_state = None
+                for s in INDIAN_LOCATIONS:
+                    if s.lower() in state.lower() or state.lower() in s.lower():
+                        matched_state = s
+                        break
+
+                if not matched_state:
+                    return gr.update(), gr.update(), gr.update(), f"📍 Detected: {state}, {district} (not in list — select manually)"
+
+                matched_district = INDIAN_LOCATIONS[matched_state][0]
+                for d in INDIAN_LOCATIONS[matched_state]:
+                    if d.lower() in district.lower() or district.lower() in d.lower():
+                        matched_district = d
+                        break
+
+                return (
+                    gr.update(value=matched_state),
+                    gr.update(choices=INDIAN_LOCATIONS[matched_state], value=matched_district),
+                    gr.update(),
+                    f"✅ **Location detected:** {matched_state} → {matched_district}",
+                )
+            except Exception as e:
+                logger.error(f"Geolocation failed: {e}")
+                return gr.update(), gr.update(), gr.update(), f"❌ Location detection failed: {str(e)[:50]}"
+
+        # JS to get browser GPS → write lat,lon into hidden textbox → trigger Python
+        geo_js = """
+        async () => {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve("0,0");
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => resolve(pos.coords.latitude + "," + pos.coords.longitude),
+                    (err) => resolve("0,0"),
+                    {timeout: 8000, enableHighAccuracy: false}
+                );
+            });
+        }
+        """
+
+        detect_btn.click(
+            fn=None, inputs=None, outputs=[geo_result],
+            js=geo_js,
+        ).then(
+            fn=detect_location_from_coords,
+            inputs=[geo_result],
+            outputs=[state_input, district_input, geo_result, location_status],
         )
 
         submit_btn.click(
