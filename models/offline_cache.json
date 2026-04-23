@@ -172,17 +172,17 @@
     }
   },
   "market:uncertain:13.0:77.6": {
-    "timestamp": 1776915512.5948892,
+    "timestamp": 1776959158.6967883,
     "value": {
       "crop": "uncertain",
-      "modal_price": 2155,
+      "modal_price": 2072,
       "msp": 2000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 248.6,
-      "price_trend": "up",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-23T09:08:32.581115"
+      "timestamp": "2026-04-23T21:15:58.696788"
     }
   },
   "market:ragi:13.0:77.6": {
@@ -337,6 +337,20 @@
       "price_trend": "down",
       "source": "market_model",
       "timestamp": "2026-04-23T20:49:15.341974"
+    }
+  },
+  "market:cotton:13.0:77.6": {
+    "timestamp": 1776959192.6865892,
+    "value": {
+      "crop": "cotton",
+      "modal_price": 6930,
+      "msp": 7121,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 248.6,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-04-23T21:16:32.686589"
     }
   }
 }

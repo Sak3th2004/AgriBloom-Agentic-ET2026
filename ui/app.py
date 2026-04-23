@@ -334,7 +334,9 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                         format="wav",
                         sources=["microphone"],
                     )
-                    transcribe_btn = gr.Button("🎤 Transcribe Voice → Text", size="sm")
+                    transcribe_btn = gr.Button("🎤 Transcribe Recorded Audio → Text", size="sm")
+                    gr.Markdown("**— OR use instant browser mic (recommended) —**")
+                    live_mic_btn = gr.Button("🎙️ Live Mic — Speak Now (works instantly!)", size="sm", variant="primary")
 
 
                 with gr.Row():
@@ -672,13 +674,13 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             outputs=[followup_output],
         )
 
-        # Voice transcription
+        # Voice transcription (Python backend fallback)
         def transcribe_audio(audio_path, language_name):
-            """Transcribe farmer's voice — uses Google Speech API (free, no key needed)."""
+            """Transcribe farmer's voice — Python fallback using Google Speech API."""
             if audio_path is None:
-                return ""
+                return "⚠️ No audio recorded. Please click the microphone icon, speak, then click again to stop."
 
-            def _do_transcribe():
+            try:
                 lang_code = LANGUAGE_MAP.get(language_name, "en")
                 lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
                             "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
@@ -689,41 +691,94 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 import soundfile as sf
                 import tempfile
                 import os
-                
-                recognizer = sr.Recognizer()
-                recognizer.energy_threshold = 300  # Adjust for noisy environments
 
-                # Convert to standard 16-bit PCM WAV using soundfile (bypasses wave module format errors)
+                recognizer = sr.Recognizer()
+                recognizer.energy_threshold = 200
+                recognizer.dynamic_energy_threshold = True
+
+                # Convert to standard 16-bit PCM WAV
                 pcm_wav_path = os.path.join(tempfile.gettempdir(), "agribloom_pcm.wav")
                 data, samplerate = sf.read(audio_path)
+                # Ensure mono
+                if len(data.shape) > 1:
+                    data = data.mean(axis=1)
                 sf.write(pcm_wav_path, data, samplerate, subtype='PCM_16')
+                logger.info(f"Audio converted: {len(data)} samples at {samplerate}Hz")
 
                 with sr.AudioFile(pcm_wav_path) as source:
-                    audio = recognizer.record(source, duration=30)  # Max 30s
+                    recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                    audio = recognizer.record(source, duration=30)
 
                 text = recognizer.recognize_google(audio, language=speech_lang)
                 logger.info(f"Voice transcribed: '{text[:80]}' (lang={speech_lang})")
                 return text
-
-            # Run with timeout to prevent UI freeze
-            try:
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(_do_transcribe)
-                    return future.result(timeout=15)
-            except concurrent.futures.TimeoutError:
-                return "⚠️ Transcription timed out. Please try shorter audio."
             except Exception as e:
-                err = str(e)
-                if "UnknownValueError" in err or "could not understand" in err.lower():
-                    return "⚠️ Could not understand. Please speak clearly and try again."
-                logger.error(f"Transcription failed: {e}")
-                return "⚠️ Could not transcribe. Please type your problem instead."
+                err_name = type(e).__name__
+                logger.error(f"Transcription error [{err_name}]: {e}")
+                if "UnknownValueError" in err_name:
+                    return "⚠️ Could not understand speech. Please speak clearly and try again."
+                return f"⚠️ Transcription failed ({err_name}). Use the 🎙️ Live Mic button below instead."
 
         transcribe_btn.click(
             fn=transcribe_audio,
             inputs=[voice_input, language],
             outputs=[text_input],
+        )
+
+        # ── JavaScript Live Mic (Browser Web Speech API — instant, no backend) ──
+        # This is the PRIMARY transcription method. It works directly in the browser
+        # using the Web Speech API. No file conversion, no API keys, no backend calls.
+        live_mic_js = """
+        async (lang) => {
+            const langMap = {
+                'English': 'en-IN', 'Hindi / हिंदी': 'hi-IN',
+                'Kannada / ಕನ್ನಡ': 'kn-IN', 'Telugu / తెలుగు': 'te-IN',
+                'Tamil / தமிழ்': 'ta-IN', 'Punjabi / ਪੰਜਾਬੀ': 'pa-IN',
+                'Gujarati / ગુજરાતી': 'gu-IN', 'Marathi / मराठी': 'mr-IN',
+                'Bengali / বাংলা': 'bn-IN', 'Odia / ଓଡ଼ିଆ': 'or-IN'
+            };
+            const speechLang = langMap[lang] || 'en-IN';
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                return '⚠️ Your browser does not support speech recognition. Use Chrome.';
+            }
+
+            return new Promise((resolve) => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                recognition.lang = speechLang;
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    resolve(text);
+                };
+                recognition.onerror = (event) => {
+                    resolve('⚠️ Speech error: ' + event.error + '. Please try again.');
+                };
+                recognition.onend = () => {
+                    // If no result was returned
+                };
+
+                // Start — browser will show mic permission popup
+                recognition.start();
+
+                // Timeout after 10 seconds
+                setTimeout(() => {
+                    recognition.stop();
+                    resolve('⚠️ No speech detected. Please speak and try again.');
+                }, 10000);
+            });
+        }
+        """
+
+        live_mic_btn.click(
+            fn=None,
+            inputs=[language],
+            outputs=[text_input],
+            js=live_mic_js,
         )
 
         # Fertilizer calculator

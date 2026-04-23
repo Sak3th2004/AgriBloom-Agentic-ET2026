@@ -340,51 +340,118 @@ def analyze_unknown_crop(image_path: str, language: str = "en") -> dict[str, Any
         }
 
 
+def _ollama_vision_analyze(image, prompt: str) -> str:
+    """Use Ollama LLaVA (local vision model) to analyze a crop image.
+    
+    This is the KEY self-learning feature: llava can SEE any image and diagnose
+    any crop disease, even crops the EfficientNet model was never trained on.
+    Downloads once (~4.7GB), runs locally forever with zero rate limits.
+    """
+    try:
+        import urllib.request
+        import json as _json
+        import base64
+        import io
+
+        # Convert PIL Image to base64
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        payload = _json.dumps({
+            "model": "llava:7b",
+            "prompt": prompt,
+            "images": [img_b64],
+            "stream": False,
+            "options": {"temperature": 0.3, "num_predict": 500},
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "http://localhost:11434/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            data = _json.loads(resp.read().decode())
+            text = data.get("response", "").strip()
+            if text:
+                logger.info(f"Ollama LLaVA vision response ({len(text)} chars)")
+            return text
+    except Exception as e:
+        logger.warning(f"Ollama LLaVA vision failed: {e}")
+        return ""
+
+
 def analyze_unknown_crop_pil(image, language: str = "en") -> dict[str, Any]:
     """
-    GenAI Vision fallback using PIL Image directly (no file path needed).
+    Vision fallback using PIL Image directly.
+    Priority: Gemini Vision → Ollama LLaVA (local vision) → error fallback.
     """
-    model = _get_gemini_model()
-    if model is None:
-        return {
-            "crop": "unknown", "disease": "unknown", "confidence": "low",
-            "treatment": "Visit nearest KVK.", "is_fallback": True,
-            "source": "genai_unavailable",
-        }
+    vision_prompt = """You are an expert Indian agricultural scientist.
+Analyze this crop leaf image:
+1. What crop is this?
+2. Is it diseased? If yes, what disease?
+3. How confident are you? (high/medium/low)
+4. What treatment do you recommend for Indian farmers?
 
+If unsure, say so honestly. Recommend visiting nearest KVK.
+DO NOT recommend banned pesticides (Endosulfan, Monocrotophos, etc.)
+
+Respond in JSON format ONLY:
+{"crop": "...", "disease": "...", "confidence": "high/medium/low", "treatment": "...", "prevention": "..."}"""
+
+    # ── Try Gemini Vision first ────────────────────────────────────────
+    _get_gemini_model()
+    if _GEMINI_AVAILABLE is True:
+        try:
+            text = _generate(vision_prompt, image=image)
+            if text:
+                if "```json" in text:
+                    text = text.split("```json")[1].split("```")[0].strip()
+                elif "```" in text:
+                    text = text.split("```")[1].split("```")[0].strip()
+                result = json.loads(text)
+                result["is_fallback"] = True
+                result["source"] = "gemini_vision"
+                logger.info(f"Gemini Vision: crop={result.get('crop')}, disease={result.get('disease')}")
+                return result
+        except Exception as e:
+            logger.warning(f"Gemini Vision failed: {e}")
+
+    # ── Fallback: Ollama LLaVA (local vision — can SEE any image) ──────
     try:
-        prompt = """You are an expert Indian agricultural scientist.
-    Analyze this crop leaf image:
-    1. What crop is this?
-    2. Is it diseased? If yes, what disease?
-    3. How confident are you? (high/medium/low)
-    4. What treatment do you recommend for Indian farmers?
-
-    If unsure, say so honestly. Recommend visiting nearest KVK.
-    DO NOT recommend banned pesticides (Endosulfan, Monocrotophos, etc.)
-
-    Respond in JSON format ONLY:
-    {"crop": "...", "disease": "...", "confidence": "high/medium/low", "treatment": "...", "prevention": "..."}"""
-
-        text = _generate(prompt, image=image)
-
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0].strip()
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0].strip()
-
-        result = json.loads(text)
-        result["is_fallback"] = True
-        result["source"] = "gemini_vision"
-        return result
-
+        text = _ollama_vision_analyze(image, vision_prompt)
+        if text:
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0].strip()
+            # Try to parse as JSON
+            try:
+                result = json.loads(text)
+            except json.JSONDecodeError:
+                # LLaVA sometimes returns plain text — extract key info
+                import re
+                crop_m = re.search(r'crop["\s:]+([a-zA-Z]+)', text, re.IGNORECASE)
+                disease_m = re.search(r'disease["\s:]+([^",}\n]+)', text, re.IGNORECASE)
+                result = {
+                    "crop": crop_m.group(1).strip() if crop_m else "unknown",
+                    "disease": disease_m.group(1).strip() if disease_m else "unknown",
+                    "confidence": "medium",
+                    "treatment": text[:300],
+                }
+            result["is_fallback"] = True
+            result["source"] = "ollama_llava_vision"
+            logger.info(f"LLaVA Vision: crop={result.get('crop')}, disease={result.get('disease')}")
+            return result
     except Exception as e:
-        logger.error(f"Gemini Vision PIL fallback failed: {e}")
-        return {
-            "crop": "unknown", "disease": "analysis_failed", "confidence": "low",
-            "treatment": "Visit nearest KVK.", "is_fallback": True,
-            "source": "genai_error",
-        }
+        logger.warning(f"LLaVA Vision fallback failed: {e}")
+
+    return {
+        "crop": "unknown", "disease": "analysis_failed", "confidence": "low",
+        "treatment": "Visit nearest KVK.", "is_fallback": True,
+        "source": "all_vision_failed",
+    }
 
 
 def generate_audit_narrative(agent_trace: dict, language: str = "en") -> str:

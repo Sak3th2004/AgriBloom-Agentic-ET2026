@@ -336,84 +336,131 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     label = pred.get("label", "unknown")
     confidence = pred.get("confidence", 0.0)
 
-    # ── Tier 2: Gemini Vision Fallback ───────────────────────────────────
-    gemini_result = None
-    if confidence < GEMINI_FALLBACK_THRESHOLD and not offline:
+    # ── Tier 2: AI Vision Fallback (LLaVA → Gemini → Ollama Text) ──────
+    #
+    # When EfficientNet is uncertain (mango, random crops, etc.), we need
+    # a model that can actually SEE the image. Priority:
+    #   1. Ollama LLaVA (local, free, sees images, no rate limits)
+    #   2. Gemini Vision (cloud, rate-limited)
+    #   3. Ollama text (can't see images, uses user description + top3 guesses)
+    #
+    vision_fallback_result = None
+    if confidence < GEMINI_FALLBACK_THRESHOLD:
+        logger.info(f"Tier 1 confidence {confidence:.2f} < {GEMINI_FALLBACK_THRESHOLD} → AI Vision fallback")
+
+        # ── Step 1: Try Ollama LLaVA Vision (LOCAL, can SEE images) ────
         try:
-            import concurrent.futures
-            from utils.genai_handler import analyze_unknown_crop_pil, is_genai_available
-            if is_genai_available():
-                logger.info(f"Tier 1 confidence {confidence:.2f} < {GEMINI_FALLBACK_THRESHOLD} → Gemini fallback")
+            from utils.genai_handler import _ollama_vision_analyze
+            llava_prompt = (
+                "You are an expert agricultural scientist. "
+                "Look at this plant/crop leaf image carefully. "
+                "Identify: 1) What crop is this? 2) What disease does it have? "
+                "3) What treatment do you recommend? "
+                "Reply ONLY in this format: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
+            )
+            llava_text = _ollama_vision_analyze(image, llava_prompt)
+            if llava_text and len(llava_text) > 10:
+                import re
+                crop_match = re.search(r'CROP:\s*([^,\n]+)', llava_text, re.IGNORECASE)
+                disease_match = re.search(r'DISEASE:\s*([^,\n]+)', llava_text, re.IGNORECASE)
+                treatment_match = re.search(r'TREATMENT:\s*(.+)', llava_text, re.IGNORECASE)
 
-                def _gemini_vision():
-                    return analyze_unknown_crop_pil(image, lang)
-
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(_gemini_vision)
-                    gemini_result = future.result(timeout=15)  # 15s max
-
-                if gemini_result and gemini_result.get("confidence") != "low":
-                    # Use Gemini result
-                    gemini_disease = gemini_result.get("disease", "unknown")
-                    gemini_crop = gemini_result.get("crop", "unknown")
+                if crop_match and disease_match:
+                    vc = crop_match.group(1).strip()
+                    vd = disease_match.group(1).strip()
+                    vt = treatment_match.group(1).strip() if treatment_match else ""
                     pred = {
-                        "label": f"{gemini_crop}___{gemini_disease}".lower().replace(" ", "_"),
-                        "confidence": 0.75 if gemini_result.get("confidence") == "high" else 0.55,
-                        "source": "gemini_vision_fallback",
-                        "gemini_raw": gemini_result,
+                        "label": f"{vc}___{vd}".lower().replace(" ", "_"),
+                        "confidence": 0.70,
+                        "source": "ollama_llava_vision",
                         "tier1_label": label,
                         "tier1_confidence": confidence,
                     }
                     label = pred["label"]
                     confidence = pred["confidence"]
-        except concurrent.futures.TimeoutError:
-            logger.warning("Gemini Vision fallback timed out after 15s")
-        except Exception as e:
-            logger.warning(f"Gemini fallback failed: {e}")
-
-    # ── OOD / Uncertain: Use Ollama for text-based diagnosis ──────────
-    if confidence < CONFIDENCE_THRESHOLD and gemini_result is None:
-        try:
-            from utils.genai_handler import _ollama_generate
-            top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
-            user_text = state.get("user_text", "")
-            user_context = f"\nThe user also mentioned: '{user_text}'." if user_text else ""
-            ood_prompt = (
-                f"An AI crop disease model analyzed a plant leaf image. "
-                f"It gave confused/uncertain results: {top3_text}. "
-                f"{user_context}\n"
-                f"Based on the user's description and the model's guesses, "
-                f"what crop and disease is this MOST LIKELY? "
-                f"Reply in exactly this format: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
-            )
-            ollama_result = _ollama_generate(ood_prompt)
-            if ollama_result and "CROP:" in ollama_result.upper():
-                # Parse Ollama response
-                import re
-                crop_match = re.search(r'CROP:\s*([^,\n]+)', ollama_result, re.IGNORECASE)
-                disease_match = re.search(r'DISEASE:\s*([^,\n]+)', ollama_result, re.IGNORECASE)
-                treatment_match = re.search(r'TREATMENT:\s*(.+)', ollama_result, re.IGNORECASE)
-
-                if crop_match and disease_match:
-                    ollama_crop = crop_match.group(1).strip()
-                    ollama_disease = disease_match.group(1).strip()
-                    ollama_treatment = treatment_match.group(1).strip() if treatment_match else ""
+                    vision_fallback_result = {"treatment": vt, "crop": vc, "disease": vd}
+                    logger.info(f"LLaVA Vision diagnosed: {vc} - {vd}")
+                else:
+                    # LLaVA responded but not in expected format — use raw text
+                    vision_fallback_result = {
+                        "treatment": llava_text[:300],
+                        "crop": "identified",
+                        "disease": "see_report",
+                    }
                     pred = {
-                        "label": f"{ollama_crop}___{ollama_disease}".lower().replace(" ", "_"),
-                        "confidence": 0.55,
-                        "source": "ollama_text_diagnosis",
+                        "label": "llava_diagnosis",
+                        "confidence": 0.60,
+                        "source": "ollama_llava_vision",
                         "tier1_label": label,
-                        "tier1_confidence": pred.get("confidence", 0),
+                        "tier1_confidence": confidence,
                     }
                     label = pred["label"]
                     confidence = pred["confidence"]
-                    gemini_result = {"treatment": ollama_treatment, "crop": ollama_crop, "disease": ollama_disease}
-                    logger.info(f"Ollama diagnosed: {ollama_crop} - {ollama_disease}")
+                    logger.info(f"LLaVA gave freeform diagnosis ({len(llava_text)} chars)")
         except Exception as e:
-            logger.warning(f"Ollama OOD diagnosis failed: {e}")
+            logger.warning(f"LLaVA Vision fallback failed: {e}")
+
+        # ── Step 2: Try Gemini Vision (cloud, rate-limited) ────────────
+        if vision_fallback_result is None and not offline:
+            try:
+                from utils.genai_handler import analyze_unknown_crop_pil
+                logger.info("LLaVA unavailable, trying Gemini Vision...")
+                gemini_result = analyze_unknown_crop_pil(image, lang)
+                if gemini_result and gemini_result.get("confidence") != "low":
+                    gc = gemini_result.get("crop", "unknown")
+                    gd = gemini_result.get("disease", "unknown")
+                    pred = {
+                        "label": f"{gc}___{gd}".lower().replace(" ", "_"),
+                        "confidence": 0.75 if gemini_result.get("confidence") == "high" else 0.55,
+                        "source": gemini_result.get("source", "gemini_vision"),
+                        "tier1_label": label,
+                        "tier1_confidence": confidence,
+                    }
+                    label = pred["label"]
+                    confidence = pred["confidence"]
+                    vision_fallback_result = gemini_result
+                    logger.info(f"Gemini/LLaVA Vision diagnosed: {gc} - {gd}")
+            except Exception as e:
+                logger.warning(f"Gemini Vision fallback failed: {e}")
+
+        # ── Step 3: Ollama text-only (uses user description + top3) ────
+        if vision_fallback_result is None:
+            try:
+                from utils.genai_handler import _ollama_generate
+                top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
+                user_text = state.get("user_text", "")
+                user_ctx = f"\nThe farmer described: '{user_text}'." if user_text else ""
+                ood_prompt = (
+                    f"A crop disease AI analyzed a plant leaf image but was uncertain. "
+                    f"Its confused guesses: {top3_text}.{user_ctx}\n"
+                    f"What crop and disease is this MOST LIKELY? "
+                    f"Reply: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
+                )
+                ollama_text = _ollama_generate(ood_prompt)
+                if ollama_text and "CROP:" in ollama_text.upper():
+                    import re
+                    cm = re.search(r'CROP:\s*([^,\n]+)', ollama_text, re.IGNORECASE)
+                    dm = re.search(r'DISEASE:\s*([^,\n]+)', ollama_text, re.IGNORECASE)
+                    tm = re.search(r'TREATMENT:\s*(.+)', ollama_text, re.IGNORECASE)
+                    if cm and dm:
+                        oc, od = cm.group(1).strip(), dm.group(1).strip()
+                        ot = tm.group(1).strip() if tm else ""
+                        pred = {
+                            "label": f"{oc}___{od}".lower().replace(" ", "_"),
+                            "confidence": 0.50,
+                            "source": "ollama_text_diagnosis",
+                            "tier1_label": label,
+                            "tier1_confidence": pred.get("confidence", 0),
+                        }
+                        label = pred["label"]
+                        confidence = pred["confidence"]
+                        vision_fallback_result = {"treatment": ot, "crop": oc, "disease": od}
+                        logger.info(f"Ollama text diagnosed: {oc} - {od}")
+            except Exception as e:
+                logger.warning(f"Ollama text OOD diagnosis failed: {e}")
 
     # ── Apply confidence threshold ───────────────────────────────────────
-    if confidence < CONFIDENCE_THRESHOLD and gemini_result is None:
+    if confidence < CONFIDENCE_THRESHOLD and vision_fallback_result is None:
         pred["original_label"] = label
         pred["label"] = "uncertain_detection"
         label = "uncertain_detection"
@@ -422,9 +469,9 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     crop_type = _extract_crop_type(label)
     treatment = _get_treatment_for_label(label, lang)
 
-    # Use Gemini treatment if available
-    if gemini_result and gemini_result.get("treatment"):
-        treatment = gemini_result["treatment"]
+    # Use vision fallback treatment if available
+    if vision_fallback_result and vision_fallback_result.get("treatment"):
+        treatment = vision_fallback_result["treatment"]
 
     # ── GenAI treatment enhancement (if available and online) ────────────
     if confidence >= CONFIDENCE_THRESHOLD and not offline and "healthy" not in label.lower():
