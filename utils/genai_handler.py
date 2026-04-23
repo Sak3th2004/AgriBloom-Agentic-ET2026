@@ -73,51 +73,98 @@ def _get_gemini_model():
         return None
 
 
-def _generate(prompt: str, image=None) -> str:
-    """Unified Gemini API call — works with both new and old SDK. Auto-retries on rate limit."""
-    _get_gemini_model()  # Ensure availability check ran
-    if _GEMINI_AVAILABLE is not True:
+def _ollama_generate(prompt: str) -> str:
+    """Fallback: use local Ollama for text generation. Zero rate limits."""
+    try:
+        import urllib.request
+        import json as _json
+
+        payload = _json.dumps({
+            "model": "llama3.2:3b",
+            "prompt": prompt,
+            "stream": False,
+            "options": {"temperature": 0.7, "num_predict": 300},
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "http://localhost:11434/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = _json.loads(resp.read().decode())
+            text = data.get("response", "").strip()
+            if text:
+                logger.info(f"Ollama generated response ({len(text)} chars)")
+            return text
+    except Exception as e:
+        logger.warning(f"Ollama fallback failed: {e}")
         return ""
 
-    import time
 
-    for attempt in range(2):  # Try twice max
-        try:
-            if _GEMINI_SDK == "new":
-                # ALWAYS create fresh client to avoid "client closed" errors
-                from google import genai as genai_new
-                fresh_client = genai_new.Client(api_key=_API_KEY)
-                contents = [prompt]
-                if image is not None:
-                    contents = [image, prompt]
-                response = fresh_client.models.generate_content(
-                    model="gemini-2.0-flash",
-                    contents=contents,
-                )
-                return response.text.strip()
-            else:
-                # Old SDK: model.generate_content(prompt)
-                if image is not None:
-                    response = _GEMINI_CLIENT.generate_content([image, prompt])
+def _generate(prompt: str, image=None) -> str:
+    """Unified LLM call: Gemini first → Ollama fallback. Never fails silently."""
+    _get_gemini_model()  # Ensure availability check ran
+
+    # ── Try Gemini first (supports images) ─────────────────────────────
+    if _GEMINI_AVAILABLE is True:
+        import time
+        for attempt in range(2):
+            try:
+                if _GEMINI_SDK == "new":
+                    from google import genai as genai_new
+                    fresh_client = genai_new.Client(api_key=_API_KEY)
+                    contents = [prompt]
+                    if image is not None:
+                        contents = [image, prompt]
+                    response = fresh_client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=contents,
+                    )
+                    result = response.text.strip()
+                    if result:
+                        return result
                 else:
-                    response = _GEMINI_CLIENT.generate_content(prompt)
-                return response.text.strip()
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                if attempt == 0:
-                    logger.warning("Rate limited — waiting 15s and retrying...")
-                    time.sleep(15)
-                    continue
-            logger.error(f"Gemini API call failed: {e}")
-            return ""
+                    if image is not None:
+                        response = _GEMINI_CLIENT.generate_content([image, prompt])
+                    else:
+                        response = _GEMINI_CLIENT.generate_content(prompt)
+                    result = response.text.strip()
+                    if result:
+                        return result
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    if attempt == 0:
+                        logger.warning("Gemini rate limited — retrying in 3s...")
+                        time.sleep(3)
+                        continue
+                logger.warning(f"Gemini failed: {e}")
+                break  # Fall through to Ollama
+
+    # ── Fallback to local Ollama (text only, no images) ────────────────
+    if image is None:
+        result = _ollama_generate(prompt)
+        if result:
+            return result
+
+    logger.error("All LLM backends failed (Gemini + Ollama)")
     return ""
 
 
 def is_genai_available() -> bool:
-    """Check if GenAI features are available."""
+    """Check if any LLM backend is available (Gemini or Ollama)."""
     _get_gemini_model()
-    return _GEMINI_AVAILABLE is True
+    if _GEMINI_AVAILABLE is True:
+        return True
+    # Check Ollama
+    try:
+        import urllib.request
+        req = urllib.request.Request("http://localhost:11434/api/tags")
+        with urllib.request.urlopen(req, timeout=2):
+            return True
+    except Exception:
+        return False
 
 
 def generate_treatment_advice(

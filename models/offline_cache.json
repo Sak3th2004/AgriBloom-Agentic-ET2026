@@ -40,15 +40,15 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1776913410.925878,
+    "timestamp": 1776915288.5167143,
     "value": {
-      "temp_c": 27.5,
+      "temp_c": 29.0,
       "rain_mm": 0.0,
-      "humidity": 79,
-      "wind_speed": 3.8,
+      "humidity": 71,
+      "wind_speed": 3.0,
       "forecast_3day_rain": 2.4,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T08:33:30.912665"
+      "timestamp": "2026-04-23T09:04:48.506406"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -132,15 +132,15 @@
     }
   },
   "weather:12.97:77.59": {
-    "timestamp": 1776910311.6332402,
+    "timestamp": 1776915569.5826108,
     "value": {
-      "temp_c": 23.9,
+      "temp_c": 27.5,
       "rain_mm": 0.0,
-      "humidity": 69,
-      "wind_speed": 2.1,
+      "humidity": 56,
+      "wind_speed": 6.9,
       "forecast_3day_rain": 0.0,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T07:41:51.614858"
+      "timestamp": "2026-04-23T09:09:29.569411"
     }
   },
   "market:rice:13.0:77.6": {
@@ -172,17 +172,17 @@
     }
   },
   "market:uncertain:13.0:77.6": {
-    "timestamp": 1774799767.3340702,
+    "timestamp": 1776915512.5948892,
     "value": {
       "crop": "uncertain",
-      "modal_price": 2173,
+      "modal_price": 2155,
       "msp": 2000,
       "mandi": "Davangere",
       "state": "Karnataka",
-      "distance_km": 248.9,
+      "distance_km": 248.6,
       "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-03-29T21:26:07.333828"
+      "timestamp": "2026-04-23T09:08:32.581115"
     }
   },
   "market:ragi:13.0:77.6": {
@@ -228,17 +228,17 @@
     }
   },
   "market:potato:13.0:77.6": {
-    "timestamp": 1776910311.6485803,
+    "timestamp": 1776915569.5980928,
     "value": {
       "crop": "potato",
-      "modal_price": 1824,
+      "modal_price": 1638,
       "msp": 1650,
       "mandi": "Hassan",
       "state": "Karnataka",
       "distance_km": 165.4,
-      "price_trend": "up",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-23T07:41:51.636236"
+      "timestamp": "2026-04-23T09:09:29.585113"
     }
   },
   "market:potato:14.5:75.9": {
@@ -281,6 +281,20 @@
       "price_trend": "up",
       "source": "market_model",
       "timestamp": "2026-04-23T08:26:30.993250"
+    }
+  },
+  "market:uncertain:14.5:75.9": {
+    "timestamp": 1776915288.5311923,
+    "value": {
+      "crop": "uncertain",
+      "modal_price": 2049,
+      "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-04-23T09:04:48.521249"
     }
   }
 }
