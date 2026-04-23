@@ -156,8 +156,14 @@ def validate_image(
     green_score = _analyze_green_channel(image)
     variance_score = _check_color_variance(image)
 
-    # Decision logic
-    is_likely_leaf = green_score >= 0.30 or variance_score >= 0.25
+    # Decision logic — both conditions must hold for real crop leaves
+    # Selfies/humans have high variance but low green score
+    # Solid backgrounds have low variance
+    is_likely_leaf = green_score >= 0.32 and variance_score >= 0.15
+
+    # Extra check: if green score is very low, it's definitely not a leaf
+    if green_score < 0.28:
+        is_likely_leaf = False
 
     if not is_likely_leaf:
         return {

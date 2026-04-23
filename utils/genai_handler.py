@@ -22,21 +22,22 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded Gemini model
-_GEMINI_MODEL = None
+# Lazy-loaded Gemini
+_GEMINI_CLIENT = None  # Keep client alive to prevent connection closure
 _GEMINI_AVAILABLE = None
 _GEMINI_SDK = None  # "new" or "old"
+_API_KEY = None
 
 
 def _get_gemini_model():
-    """Lazy-load Gemini model."""
-    global _GEMINI_MODEL, _GEMINI_AVAILABLE, _GEMINI_SDK
+    """Lazy-load Gemini and check availability."""
+    global _GEMINI_CLIENT, _GEMINI_AVAILABLE, _GEMINI_SDK, _API_KEY
 
     if _GEMINI_AVAILABLE is False:
         return None
 
-    if _GEMINI_MODEL is not None:
-        return _GEMINI_MODEL
+    if _GEMINI_CLIENT is not None:
+        return _GEMINI_CLIENT
 
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -44,27 +45,28 @@ def _get_gemini_model():
         _GEMINI_AVAILABLE = False
         return None
 
+    _API_KEY = api_key
+
     try:
         # Try new google.genai package first
         try:
             from google import genai as genai_new
-            client = genai_new.Client(api_key=api_key)
-            _GEMINI_MODEL = client.models
+            _GEMINI_CLIENT = genai_new.Client(api_key=api_key)
             _GEMINI_SDK = "new"
             _GEMINI_AVAILABLE = True
             logger.info("Gemini loaded via google.genai (new SDK)")
-            return _GEMINI_MODEL
+            return _GEMINI_CLIENT
         except ImportError:
             pass
 
         # Fall back to deprecated google.generativeai
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        _GEMINI_MODEL = genai.GenerativeModel("gemini-2.0-flash")
+        _GEMINI_CLIENT = genai.GenerativeModel("gemini-2.0-flash")
         _GEMINI_SDK = "old"
         _GEMINI_AVAILABLE = True
         logger.info("Gemini 2.0 Flash loaded via google.generativeai")
-        return _GEMINI_MODEL
+        return _GEMINI_CLIENT
     except Exception as e:
         logger.error(f"Failed to load Gemini model: {e}")
         _GEMINI_AVAILABLE = False
@@ -73,17 +75,19 @@ def _get_gemini_model():
 
 def _generate(prompt: str, image=None) -> str:
     """Unified Gemini API call — works with both new and old SDK."""
-    model = _get_gemini_model()
-    if model is None:
+    _get_gemini_model()  # Ensure availability check ran
+    if _GEMINI_AVAILABLE is not True:
         return ""
 
     try:
         if _GEMINI_SDK == "new":
-            # New SDK: model.generate_content(model=..., contents=...)
+            # ALWAYS create fresh client to avoid "client closed" errors
+            from google import genai as genai_new
+            fresh_client = genai_new.Client(api_key=_API_KEY)
             contents = [prompt]
             if image is not None:
                 contents = [image, prompt]
-            response = model.generate_content(
+            response = fresh_client.models.generate_content(
                 model="gemini-2.0-flash",
                 contents=contents,
             )
@@ -91,9 +95,9 @@ def _generate(prompt: str, image=None) -> str:
         else:
             # Old SDK: model.generate_content(prompt)
             if image is not None:
-                response = model.generate_content([image, prompt])
+                response = _GEMINI_CLIENT.generate_content([image, prompt])
             else:
-                response = model.generate_content(prompt)
+                response = _GEMINI_CLIENT.generate_content(prompt)
             return response.text.strip()
     except Exception as e:
         logger.error(f"Gemini API call failed: {e}")

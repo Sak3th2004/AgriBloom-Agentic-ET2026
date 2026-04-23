@@ -40,15 +40,15 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1776911290.5521634,
+    "timestamp": 1776913410.925878,
     "value": {
-      "temp_c": 26.0,
+      "temp_c": 27.5,
       "rain_mm": 0.0,
-      "humidity": 87,
-      "wind_speed": 3.1,
+      "humidity": 79,
+      "wind_speed": 3.8,
       "forecast_3day_rain": 2.4,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T07:58:10.529991"
+      "timestamp": "2026-04-23T08:33:30.912665"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -242,17 +242,45 @@
     }
   },
   "market:potato:14.5:75.9": {
-    "timestamp": 1776911290.5687923,
+    "timestamp": 1776912237.317921,
     "value": {
       "crop": "potato",
-      "modal_price": 1893,
+      "modal_price": 1566,
       "msp": 1650,
       "mandi": "Hassan",
       "state": "Karnataka",
       "distance_km": 162.5,
+      "price_trend": "down",
+      "source": "market_model",
+      "timestamp": "2026-04-23T08:13:57.303921"
+    }
+  },
+  "market:cotton:14.5:75.9": {
+    "timestamp": 1776913410.9396374,
+    "value": {
+      "crop": "cotton",
+      "modal_price": 6595,
+      "msp": 7121,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
+      "price_trend": "down",
+      "source": "market_model",
+      "timestamp": "2026-04-23T08:33:30.928397"
+    }
+  },
+  "market:maize:14.5:75.9": {
+    "timestamp": 1776912991.0066433,
+    "value": {
+      "crop": "maize",
+      "modal_price": 2348,
+      "msp": 2225,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
       "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-04-23T07:58:10.555382"
+      "timestamp": "2026-04-23T08:26:30.993250"
     }
   }
 }

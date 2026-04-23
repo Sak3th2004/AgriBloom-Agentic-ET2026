@@ -578,36 +578,43 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
 
         # Voice transcription
         def transcribe_audio(audio_path, language_name):
-            """Transcribe farmer's voice input using Whisper."""
+            """Transcribe farmer's voice input using Gemini AI."""
             if audio_path is None:
                 return ""
             try:
-                import whisper
-                model = whisper.load_model("base")
                 lang_code = LANGUAGE_MAP.get(language_name, "en")
-                result = model.transcribe(audio_path, language=lang_code)
-                text = result.get("text", "").strip()
-                logger.info(f"Voice transcribed: '{text[:50]}...' (lang={lang_code})")
-                return text
-            except ImportError:
-                # Fallback: use Google Speech Recognition
-                try:
-                    import speech_recognition as sr
-                    recognizer = sr.Recognizer()
-                    with sr.AudioFile(audio_path) as source:
-                        audio = recognizer.record(source)
-                    lang_code = LANGUAGE_MAP.get(language_name, "en")
-                    lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
-                                "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
-                                "gu": "gu-IN", "mr": "mr-IN", "bn": "bn-IN", "or": "or-IN"}
-                    text = recognizer.recognize_google(audio, language=lang_map.get(lang_code, "en-IN"))
+                lang_names = {"en": "English", "hi": "Hindi", "kn": "Kannada",
+                              "te": "Telugu", "ta": "Tamil", "pa": "Punjabi",
+                              "gu": "Gujarati", "mr": "Marathi", "bn": "Bengali", "or": "Odia"}
+                lang_name = lang_names.get(lang_code, "English")
+
+                from utils.genai_handler import _generate, is_genai_available
+                if is_genai_available():
+                    # Upload audio file to Gemini for transcription
+                    from google import genai as genai_mod
+                    import os
+                    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+                    client = genai_mod.Client(api_key=api_key)
+
+                    # Upload the audio file
+                    audio_file = client.files.upload(file=audio_path)
+
+                    prompt = f"""Transcribe this audio recording. The farmer is speaking in {lang_name}.
+                    Return ONLY the transcribed text, nothing else. No quotes, no explanation.
+                    If the audio is unclear, transcribe what you can hear."""
+
+                    response = client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=[audio_file, prompt],
+                    )
+                    text = response.text.strip()
+                    logger.info(f"Voice transcribed via Gemini: '{text[:50]}...' (lang={lang_code})")
                     return text
-                except Exception as e2:
-                    logger.error(f"Speech recognition failed: {e2}")
-                    return f"⚠️ Could not transcribe. Please type your problem instead."
+                else:
+                    return "⚠️ Voice transcription needs internet. Please type your problem."
             except Exception as e:
                 logger.error(f"Transcription failed: {e}")
-                return f"⚠️ Transcription error. Please type your problem."
+                return f"⚠️ Could not transcribe audio. Please type your problem instead."
 
         transcribe_btn.click(
             fn=transcribe_audio,
