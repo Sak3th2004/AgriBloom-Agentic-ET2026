@@ -331,6 +331,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     voice_input = gr.Audio(
                         label="🎤 Record Voice (speak in your language)",
                         type="filepath",
+                        format="wav",
                         sources=["microphone"],
                     )
                     transcribe_btn = gr.Button("🎤 Transcribe Voice → Text", size="sm")
@@ -569,16 +570,30 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         )
 
         # ── Geolocation Detection ─────────────────────────────────────────
+        # ── Geolocation Detection ─────────────────────────────────────────
         def detect_location_from_coords(geo_text):
             """Reverse geocode lat/lon to nearest Indian state/district."""
-            if not geo_text or "," not in geo_text:
-                return gr.update(), gr.update(), gr.update(), "❌ Could not detect location. Please select manually."
             try:
-                parts = geo_text.strip().split(",")
-                lat, lon = float(parts[0]), float(parts[1])
-                source = "GPS" if len(parts) <= 2 else "IP"
+                source = "GPS"
+                if not geo_text or geo_text.strip() == "0,0" or "," not in geo_text:
+                    # Python-side IP Geolocation fallback (works flawlessly for local host)
+                    import urllib.request, json
+                    try:
+                        req = urllib.request.Request("https://ipapi.co/json/", headers={"User-Agent": "AgriBloom/1.0"})
+                        with urllib.request.urlopen(req, timeout=5) as resp:
+                            ip_data = json.loads(resp.read().decode())
+                            lat = float(ip_data.get("latitude", 0))
+                            lon = float(ip_data.get("longitude", 0))
+                            source = "IP"
+                    except Exception as e:
+                        logger.error(f"IP Geo failed: {e}")
+                        return gr.update(), gr.update(), gr.update(), "❌ Could not detect location. Please select manually."
+                else:
+                    parts = geo_text.strip().split(",")
+                    lat, lon = float(parts[0]), float(parts[1])
+                    if len(parts) > 2 and parts[2] == "ip":
+                        source = "IP"
 
-                # Check for invalid coordinates (0,0 means all methods failed)
                 if abs(lat) < 0.1 and abs(lon) < 0.1:
                     return gr.update(), gr.update(), gr.update(), "❌ Location access denied. Please select manually."
 
@@ -682,22 +697,9 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 recognizer = sr.Recognizer()
                 recognizer.energy_threshold = 300  # Adjust for noisy environments
 
-                # Try to open the audio file directly
-                try:
-                    with sr.AudioFile(audio_path) as source:
-                        audio = recognizer.record(source, duration=30)  # Max 30s
-                except Exception:
-                    # If format not supported, convert with pydub
-                    import tempfile, os
-                    from pydub import AudioSegment
-                    sound = AudioSegment.from_file(audio_path)
-                    # Trim to 30s max
-                    if len(sound) > 30000:
-                        sound = sound[:30000]
-                    wav_path = os.path.join(tempfile.gettempdir(), "agribloom_voice.wav")
-                    sound.export(wav_path, format="wav")
-                    with sr.AudioFile(wav_path) as source:
-                        audio = recognizer.record(source)
+                # Open the WAV audio file directly (Gradio format='wav' ensures this)
+                with sr.AudioFile(audio_path) as source:
+                    audio = recognizer.record(source, duration=30)  # Max 30s
 
                 text = recognizer.recognize_google(audio, language=speech_lang)
                 logger.info(f"Voice transcribed: '{text[:80]}' (lang={speech_lang})")

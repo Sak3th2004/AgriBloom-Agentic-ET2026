@@ -29,22 +29,30 @@ _GEMINI_SDK = None  # "new" or "old"
 _API_KEY = None
 
 
-def _get_gemini_model():
-    """Lazy-load Gemini and check availability."""
-    global _GEMINI_CLIENT, _GEMINI_AVAILABLE, _GEMINI_SDK, _API_KEY
+API_KEYS = [
+    os.getenv("GEMINI_API_KEY", "").strip(),
+    "AIzaSyBlk9z1cK7DsCvRgSN4STUocuaRcmrEt-A",
+    "AIzaSyCUbaDfu6O_fV7RFItFDMztq8c9VUvf4N8"
+]
+API_KEYS = [k for k in API_KEYS if k]
+_CURRENT_KEY_IDX = 0
 
-    if _GEMINI_AVAILABLE is False:
+def _get_gemini_model(force_reinit=False):
+    """Lazy-load Gemini and check availability. Supports rotation."""
+    global _GEMINI_CLIENT, _GEMINI_AVAILABLE, _GEMINI_SDK, _API_KEY, _CURRENT_KEY_IDX
+
+    if _GEMINI_AVAILABLE is False and not force_reinit:
         return None
 
-    if _GEMINI_CLIENT is not None:
+    if _GEMINI_CLIENT is not None and not force_reinit:
         return _GEMINI_CLIENT
 
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
+    if not API_KEYS:
         logger.warning("GEMINI_API_KEY not set — GenAI features disabled")
         _GEMINI_AVAILABLE = False
         return None
 
+    api_key = API_KEYS[_CURRENT_KEY_IDX]
     _API_KEY = api_key
 
     try:
@@ -54,7 +62,7 @@ def _get_gemini_model():
             _GEMINI_CLIENT = genai_new.Client(api_key=api_key)
             _GEMINI_SDK = "new"
             _GEMINI_AVAILABLE = True
-            logger.info("Gemini loaded via google.genai (new SDK)")
+            logger.info(f"Gemini loaded (key {api_key[:10]}...) via google.genai")
             return _GEMINI_CLIENT
         except ImportError:
             pass
@@ -65,7 +73,7 @@ def _get_gemini_model():
         _GEMINI_CLIENT = genai.GenerativeModel("gemini-2.0-flash")
         _GEMINI_SDK = "old"
         _GEMINI_AVAILABLE = True
-        logger.info("Gemini 2.0 Flash loaded via google.generativeai")
+        logger.info(f"Gemini loaded (key {api_key[:10]}...) via google.generativeai")
         return _GEMINI_CLIENT
     except Exception as e:
         logger.error(f"Failed to load Gemini model: {e}")
@@ -103,17 +111,21 @@ def _ollama_generate(prompt: str) -> str:
 
 
 def _generate(prompt: str, image=None) -> str:
-    """Unified LLM call: Gemini first → Ollama fallback. Never fails silently."""
+    """Unified LLM call: Gemini first → Ollama fallback. Auto-rotates keys on 429."""
+    global _CURRENT_KEY_IDX
     _get_gemini_model()  # Ensure availability check ran
 
     # ── Try Gemini first (supports images) ─────────────────────────────
     if _GEMINI_AVAILABLE is True:
         import time
-        for attempt in range(2):
+        max_attempts = len(API_KEYS) + 1  # Try each key once
+        
+        for attempt in range(max_attempts):
             try:
                 if _GEMINI_SDK == "new":
                     from google import genai as genai_new
-                    fresh_client = genai_new.Client(api_key=_API_KEY)
+                    # Always create a fresh client with the current key to be safe
+                    fresh_client = genai_new.Client(api_key=API_KEYS[_CURRENT_KEY_IDX])
                     contents = [prompt]
                     if image is not None:
                         contents = [image, prompt]
@@ -134,13 +146,17 @@ def _generate(prompt: str, image=None) -> str:
                         return result
             except Exception as e:
                 error_str = str(e)
-                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                    if attempt == 0:
-                        logger.warning("Gemini rate limited — retrying in 3s...")
-                        time.sleep(3)
-                        continue
-                logger.warning(f"Gemini failed: {e}")
-                break  # Fall through to Ollama
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
+                    # Rotate Key
+                    _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
+                    logger.info(f"Rotating to API key index {_CURRENT_KEY_IDX}...")
+                    _get_gemini_model(force_reinit=True)
+                    time.sleep(1)
+                    continue
+                
+                logger.warning(f"Gemini generation failed: {e}")
+                break  # Non-rate limit error, fall through to Ollama
 
     # ── Fallback to local Ollama (text only, no images) ────────────────
     if image is None:

@@ -330,7 +330,9 @@ def _generate_fallback_audio(output_dir: Path) -> Path:
 
 
 def _calculate_health_trajectory(disease_label: str, confidence: float) -> tuple[float, float]:
-    """Calculate before/after health scores for Bloom Simulator."""
+    if disease_label == "invalid_image" or "invalid" in disease_label.lower():
+        return 0.0, 0.0
+
     # Base health depends on disease severity
     severity_map = {
         "healthy": (85, 95),
