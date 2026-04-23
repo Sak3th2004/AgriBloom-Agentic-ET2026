@@ -110,21 +110,24 @@ def _ollama_generate(prompt: str) -> str:
         return ""
 
 
+_GEMINI_COOLDOWN_UNTIL = 0  # timestamp — skip Gemini until this time
+
 def _generate(prompt: str, image=None) -> str:
     """Unified LLM call: Gemini first → Ollama fallback. Auto-rotates keys on 429."""
-    global _CURRENT_KEY_IDX
+    global _CURRENT_KEY_IDX, _GEMINI_COOLDOWN_UNTIL
+    import time
     _get_gemini_model()  # Ensure availability check ran
 
     # ── Try Gemini first (supports images) ─────────────────────────────
-    if _GEMINI_AVAILABLE is True:
-        import time
-        max_attempts = len(API_KEYS) + 1  # Try each key once
+    # Skip if all keys were recently exhausted (cooldown to save 30s of wasted retries)
+    if _GEMINI_AVAILABLE is True and time.time() > _GEMINI_COOLDOWN_UNTIL:
+        max_attempts = len(API_KEYS) + 1
+        rate_limit_count = 0
         
         for attempt in range(max_attempts):
             try:
                 if _GEMINI_SDK == "new":
                     from google import genai as genai_new
-                    # Always create a fresh client with the current key to be safe
                     fresh_client = genai_new.Client(api_key=API_KEYS[_CURRENT_KEY_IDX])
                     contents = [prompt]
                     if image is not None:
@@ -147,16 +150,22 @@ def _generate(prompt: str, image=None) -> str:
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    rate_limit_count += 1
                     logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
-                    # Rotate Key
                     _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
-                    logger.info(f"Rotating to API key index {_CURRENT_KEY_IDX}...")
                     _get_gemini_model(force_reinit=True)
-                    time.sleep(1)
+                    # If ALL keys are exhausted, set a 60s cooldown
+                    if rate_limit_count >= len(API_KEYS):
+                        _GEMINI_COOLDOWN_UNTIL = time.time() + 60
+                        logger.warning("All Gemini keys exhausted — cooldown 60s, using Ollama")
+                        break
+                    time.sleep(0.5)
                     continue
                 
                 logger.warning(f"Gemini generation failed: {e}")
-                break  # Non-rate limit error, fall through to Ollama
+                break
+    elif _GEMINI_AVAILABLE is True:
+        logger.info("Gemini in cooldown — skipping to Ollama")
 
     # ── Fallback to local Ollama (text only, no images) ────────────────
     if image is None:

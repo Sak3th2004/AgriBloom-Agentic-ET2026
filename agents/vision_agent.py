@@ -351,12 +351,18 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
         # ── Step 1: Try Ollama LLaVA Vision (LOCAL, can SEE images) ────
         try:
             from utils.genai_handler import _ollama_vision_analyze
+            top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
+            user_text = state.get("user_text", "")
+            user_hint = f" The farmer says: '{user_text}'." if user_text else ""
             llava_prompt = (
-                "You are an expert agricultural scientist. "
-                "Look at this plant/crop leaf image carefully. "
-                "Identify: 1) What crop is this? 2) What disease does it have? "
-                "3) What treatment do you recommend? "
-                "Reply ONLY in this format: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
+                "You are an expert Indian agricultural scientist who specializes in crop disease identification. "
+                "Look at this plant leaf image very carefully. "
+                "You MUST identify the EXACT crop species name. DO NOT say 'leafy green plant' or 'green plant'. "
+                "Instead say the specific name like: Mango, Cotton, Tomato, Rice, Wheat, Potato, Apple, Grape, Sugarcane, Maize, Pepper, Chilli, Banana, Coconut, Groundnut, Soybean, etc. "
+                f"An AI model guessed these (may be wrong): {top3_text}.{user_hint} "
+                "Based on the leaf shape, color, texture and visible symptoms, identify: "
+                "1) The EXACT crop species name 2) The specific disease or pest 3) Treatment "
+                "Reply STRICTLY in this format: CROP: <exact species name>, DISEASE: <specific disease name>, TREATMENT: <one practical sentence>"
             )
             llava_text = _ollama_vision_analyze(image, llava_prompt)
             if llava_text and len(llava_text) > 10:
