@@ -319,10 +319,17 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     gemini_result = None
     if confidence < GEMINI_FALLBACK_THRESHOLD and not offline:
         try:
+            import concurrent.futures
             from utils.genai_handler import analyze_unknown_crop_pil, is_genai_available
             if is_genai_available():
                 logger.info(f"Tier 1 confidence {confidence:.2f} < {GEMINI_FALLBACK_THRESHOLD} → Gemini fallback")
-                gemini_result = analyze_unknown_crop_pil(image, lang)
+
+                def _gemini_vision():
+                    return analyze_unknown_crop_pil(image, lang)
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_gemini_vision)
+                    gemini_result = future.result(timeout=15)  # 15s max
 
                 if gemini_result and gemini_result.get("confidence") != "low":
                     # Use Gemini result
@@ -338,6 +345,8 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     }
                     label = pred["label"]
                     confidence = pred["confidence"]
+        except concurrent.futures.TimeoutError:
+            logger.warning("Gemini Vision fallback timed out after 15s")
         except Exception as e:
             logger.warning(f"Gemini fallback failed: {e}")
 
@@ -358,13 +367,20 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     # ── GenAI treatment enhancement (if available and online) ────────────
     if confidence >= CONFIDENCE_THRESHOLD and not offline and "healthy" not in label.lower():
         try:
+            import concurrent.futures
             from utils.genai_handler import generate_treatment_advice, is_genai_available
             if is_genai_available():
-                genai_advice = generate_treatment_advice(
-                    disease=label, crop=crop_type, language=lang,
-                )
+                def _gen():
+                    return generate_treatment_advice(
+                        disease=label, crop=crop_type, language=lang,
+                    )
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_gen)
+                    genai_advice = future.result(timeout=10)  # 10s max
                 if genai_advice:
                     treatment = genai_advice
+        except concurrent.futures.TimeoutError:
+            logger.warning("GenAI treatment timed out after 10s — using local treatment")
         except Exception as e:
             logger.warning(f"GenAI treatment enhancement skipped: {e}")
 

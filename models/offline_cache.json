@@ -132,15 +132,15 @@
     }
   },
   "weather:12.97:77.59": {
-    "timestamp": 1774800746.5713327,
+    "timestamp": 1776910311.6332402,
     "value": {
-      "temp_c": 24.5,
+      "temp_c": 23.9,
       "rain_mm": 0.0,
-      "humidity": 64,
-      "wind_speed": 8.6,
-      "forecast_3day_rain": 2.2,
+      "humidity": 69,
+      "wind_speed": 2.1,
+      "forecast_3day_rain": 0.0,
       "source": "open-meteo",
-      "timestamp": "2026-03-29T21:42:26.551386"
+      "timestamp": "2026-04-23T07:41:51.614858"
     }
   },
   "market:rice:13.0:77.6": {
@@ -225,6 +225,20 @@
       "price_trend": "stable",
       "source": "market_model",
       "timestamp": "2026-03-29T21:54:48.041879"
+    }
+  },
+  "market:potato:13.0:77.6": {
+    "timestamp": 1776910311.6485803,
+    "value": {
+      "crop": "potato",
+      "modal_price": 1824,
+      "msp": 1650,
+      "mandi": "Hassan",
+      "state": "Karnataka",
+      "distance_km": 165.4,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-04-23T07:41:51.636236"
     }
   }
 }

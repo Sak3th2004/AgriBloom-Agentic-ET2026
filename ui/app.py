@@ -457,16 +457,24 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             lat, lon = _get_coords(district)
 
             try:
-                result = run_pipeline(
-                    image=image,
-                    image_path="",
-                    user_text=text_value or "",
-                    user_language=lang_code,
-                    lang=lang_code,
-                    offline=bool(offline),
-                    lat=float(lat),
-                    lon=float(lon),
-                )
+                import concurrent.futures
+
+                def _run():
+                    return run_pipeline(
+                        image=image,
+                        image_path="",
+                        user_text=text_value or "",
+                        user_language=lang_code,
+                        lang=lang_code,
+                        offline=bool(offline),
+                        lat=float(lat),
+                        lon=float(lon),
+                    )
+
+                # 60s timeout — pipeline must complete in 60 seconds
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_run)
+                    result = future.result(timeout=60)
 
                 conf = result.get("disease_prediction", {}).get("confidence", 0)
                 source = result.get("disease_prediction", {}).get("source", "")
@@ -489,6 +497,14 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     result.get("audit_pdf_path"),
                     status,
                     new_history,
+                )
+            except concurrent.futures.TimeoutError:
+                logger.error("Pipeline timed out after 60 seconds")
+                return (
+                    "⏱️ Analysis is taking too long. Please try again or enable Offline Mode.",
+                    None, None, None,
+                    "❌ **Timeout** — Try Offline Mode or retry",
+                    history or [],
                 )
             except Exception as e:
                 logger.error(f"Pipeline error: {e}", exc_info=True)

@@ -448,15 +448,19 @@ def run_knowledge(state: dict[str, Any]) -> dict[str, Any]:
     # ── RAG: Query knowledge base for disease-specific advice ────────
     rag_context = ""
     try:
-        from knowledge_base.build_knowledge_db import rag_query, symptom_search
+        import concurrent.futures
+        def _run_rag():
+            from knowledge_base.build_knowledge_db import rag_query, symptom_search
+            if user_text and len(user_text) > 10:
+                return symptom_search(user_text, crop=crop, n_results=3)
+            else:
+                query = f"{crop} {disease_label.replace('_', ' ')}" if disease_label != "unknown" else crop
+                return rag_query(query, crop=crop, n_results=3)
 
-        # If farmer described symptoms, use symptom search
-        if user_text and len(user_text) > 10:
-            rag_results = symptom_search(user_text, crop=crop, n_results=3)
-        else:
-            # Use disease label for RAG query
-            query = f"{crop} {disease_label.replace('_', ' ')}" if disease_label != "unknown" else crop
-            rag_results = rag_query(query, crop=crop, n_results=3)
+        # RAG must complete in 5 seconds or we skip it
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_run_rag)
+            rag_results = future.result(timeout=5)
 
         if rag_results:
             rag_texts = [r["text"] for r in rag_results]
