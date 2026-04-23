@@ -376,6 +376,7 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
         try:
             from utils.genai_handler import _ollama_generate
             top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
+            user_text = state.get("user_text", "")
             user_context = f"\nThe user also mentioned: '{user_text}'." if user_text else ""
             ood_prompt = (
                 f"An AI crop disease model analyzed a plant leaf image. "

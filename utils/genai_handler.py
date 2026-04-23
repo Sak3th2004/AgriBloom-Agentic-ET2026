@@ -99,7 +99,7 @@ def _ollama_generate(prompt: str) -> str:
             data=payload,
             headers={"Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             data = _json.loads(resp.read().decode())
             text = data.get("response", "").strip()
             if text:

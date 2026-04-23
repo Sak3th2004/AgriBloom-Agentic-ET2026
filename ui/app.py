@@ -686,11 +686,19 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 speech_lang = lang_map.get(lang_code, "en-IN")
 
                 import speech_recognition as sr
+                import soundfile as sf
+                import tempfile
+                import os
+                
                 recognizer = sr.Recognizer()
                 recognizer.energy_threshold = 300  # Adjust for noisy environments
 
-                # Open the WAV audio file directly (Gradio format='wav' ensures this)
-                with sr.AudioFile(audio_path) as source:
+                # Convert to standard 16-bit PCM WAV using soundfile (bypasses wave module format errors)
+                pcm_wav_path = os.path.join(tempfile.gettempdir(), "agribloom_pcm.wav")
+                data, samplerate = sf.read(audio_path)
+                sf.write(pcm_wav_path, data, samplerate, subtype='PCM_16')
+
+                with sr.AudioFile(pcm_wav_path) as source:
                     audio = recognizer.record(source, duration=30)  # Max 30s
 
                 text = recognizer.recognize_google(audio, language=speech_lang)
