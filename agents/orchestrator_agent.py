@@ -152,17 +152,20 @@ def run_orchestrator(state: dict[str, Any]) -> dict[str, Any]:
     """
     # Extract inputs
     user_text = (state.get("user_text") or "").strip()
-    user_language = state.get("user_language", "en")
+    user_language = state.get("user_language", "")
     has_image = state.get("image") is not None
     offline = bool(state.get("offline", False))
 
     # Initialize or get chat history
     chat_history = state.get("chat_history", [])
 
-    # Normalize language
-    if user_language not in SUPPORTED_LANGUAGES:
+    # Auto-detect language from text if not explicitly set
+    if not user_language or user_language == "en":
         detected_lang = _detect_language(user_text, "en")
-        user_language = detected_lang
+        if detected_lang != "en":
+            user_language = detected_lang
+        elif not user_language:
+            user_language = "en"
 
     # Detect intent and crop
     intent = _detect_intent(user_text, has_image)

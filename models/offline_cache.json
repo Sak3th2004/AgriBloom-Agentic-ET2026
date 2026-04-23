@@ -1,0 +1,230 @@
+{
+  "weather:17.39:78.49": {
+    "timestamp": 1774775045.5143926,
+    "value": {
+      "temp_c": 36.9,
+      "rain_mm": 0.0,
+      "humidity": 26,
+      "wind_speed": 10.6,
+      "forecast_3day_rain": 3.7,
+      "source": "open-meteo",
+      "timestamp": "2026-03-29T14:34:05.503847"
+    }
+  },
+  "market:ragi:17.4:78.5": {
+    "timestamp": 1774774166.964986,
+    "value": {
+      "crop": "ragi",
+      "modal_price": 4576,
+      "msp": 4290,
+      "mandi": "Anantapur",
+      "state": "Andhra Pradesh",
+      "distance_km": 315.8,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T14:19:26.949585"
+    }
+  },
+  "market:sugarcane:17.4:78.5": {
+    "timestamp": 1774775045.528654,
+    "value": {
+      "crop": "sugarcane",
+      "modal_price": 311,
+      "msp": 340,
+      "mandi": "Belgaum",
+      "state": "Karnataka",
+      "distance_km": 474.4,
+      "price_trend": "down",
+      "source": "market_model",
+      "timestamp": "2026-03-29T14:34:05.518083"
+    }
+  },
+  "weather:14.46:75.92": {
+    "timestamp": 1774801488.0388558,
+    "value": {
+      "temp_c": 28.5,
+      "rain_mm": 0.0,
+      "humidity": 47,
+      "wind_speed": 9.8,
+      "forecast_3day_rain": 1.2,
+      "source": "open-meteo",
+      "timestamp": "2026-03-29T21:54:48.024037"
+    }
+  },
+  "market:ragi:14.5:75.9": {
+    "timestamp": 1774775192.9101353,
+    "value": {
+      "crop": "ragi",
+      "modal_price": 4123,
+      "msp": 4290,
+      "mandi": "Chitradurga",
+      "state": "Karnataka",
+      "distance_km": 59.2,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-03-29T14:36:32.895697"
+    }
+  },
+  "market:unknown:14.5:75.9": {
+    "timestamp": 1774794286.6182108,
+    "value": {
+      "crop": "unknown",
+      "modal_price": 2241,
+      "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.0,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T19:54:46.607629"
+    }
+  },
+  "weather:16.31:80.44": {
+    "timestamp": 1774794508.5139616,
+    "value": {
+      "temp_c": 29.0,
+      "rain_mm": 0.0,
+      "humidity": 74,
+      "wind_speed": 8.9,
+      "forecast_3day_rain": 0.2,
+      "source": "open-meteo",
+      "timestamp": "2026-03-29T19:58:28.501048"
+    }
+  },
+  "market:unknown:16.3:80.4": {
+    "timestamp": 1774794508.5286648,
+    "value": {
+      "crop": "unknown",
+      "modal_price": 2114,
+      "msp": 2000,
+      "mandi": "Karimnagar",
+      "state": "Telangana",
+      "distance_km": 277.6,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T19:58:28.517084"
+    }
+  },
+  "weather:16.51:80.65": {
+    "timestamp": 1774795913.1099687,
+    "value": {
+      "temp_c": 30.0,
+      "rain_mm": 0.0,
+      "humidity": 66,
+      "wind_speed": 8.7,
+      "forecast_3day_rain": 0.0,
+      "source": "open-meteo",
+      "timestamp": "2026-03-29T20:21:53.109504"
+    }
+  },
+  "market:rice:16.5:80.6": {
+    "timestamp": 1774795913.1307878,
+    "value": {
+      "crop": "rice",
+      "modal_price": 2559,
+      "msp": 2320,
+      "mandi": "Guntur",
+      "state": "Andhra Pradesh",
+      "distance_km": 32.3,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T20:21:53.112837"
+    }
+  },
+  "weather:12.97:77.59": {
+    "timestamp": 1774800746.5713327,
+    "value": {
+      "temp_c": 24.5,
+      "rain_mm": 0.0,
+      "humidity": 64,
+      "wind_speed": 8.6,
+      "forecast_3day_rain": 2.2,
+      "source": "open-meteo",
+      "timestamp": "2026-03-29T21:42:26.551386"
+    }
+  },
+  "market:rice:13.0:77.6": {
+    "timestamp": 1774797613.8930779,
+    "value": {
+      "crop": "rice",
+      "modal_price": 2447,
+      "msp": 2320,
+      "mandi": "Raichur",
+      "state": "Karnataka",
+      "distance_km": 360.8,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T20:50:13.879431"
+    }
+  },
+  "market:rice:14.5:75.9": {
+    "timestamp": 1774798648.7168796,
+    "value": {
+      "crop": "rice",
+      "modal_price": 2271,
+      "msp": 2320,
+      "mandi": "Raichur",
+      "state": "Karnataka",
+      "distance_km": 250.1,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-03-29T21:07:28.703993"
+    }
+  },
+  "market:uncertain:13.0:77.6": {
+    "timestamp": 1774799767.3340702,
+    "value": {
+      "crop": "uncertain",
+      "modal_price": 2173,
+      "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 248.9,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T21:26:07.333828"
+    }
+  },
+  "market:ragi:13.0:77.6": {
+    "timestamp": 1774799860.1367335,
+    "value": {
+      "crop": "ragi",
+      "modal_price": 4755,
+      "msp": 4290,
+      "mandi": "Tumkur",
+      "state": "Karnataka",
+      "distance_km": 66.8,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-03-29T21:27:40.136396"
+    }
+  },
+  "market:sugarcane:13.0:77.6": {
+    "timestamp": 1774800746.5909073,
+    "value": {
+      "crop": "sugarcane",
+      "modal_price": 320,
+      "msp": 340,
+      "mandi": "Belgaum",
+      "state": "Karnataka",
+      "distance_km": 469.3,
+      "price_trend": "down",
+      "source": "market_model",
+      "timestamp": "2026-03-29T21:42:26.575111"
+    }
+  },
+  "market:sugarcane:14.5:75.9": {
+    "timestamp": 1774801488.0528555,
+    "value": {
+      "crop": "sugarcane",
+      "modal_price": 349,
+      "msp": 340,
+      "mandi": "Belgaum",
+      "state": "Karnataka",
+      "distance_km": 220.5,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-03-29T21:54:48.041879"
+    }
+  }
+}
