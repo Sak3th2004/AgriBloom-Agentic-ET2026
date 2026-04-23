@@ -36,7 +36,7 @@ def _load_json(filename: str) -> dict:
 BANNED_DB = _load_json("banned_pesticides.json")
 MRL_DB = _load_json("mrl_limits.json")
 ALTERNATIVES_DB = _load_json("safe_alternatives.json")
-LEGACY_RULES = _load_json("compliance_rules.json")
+LEGACY_RULES = {}  # Legacy rules removed — now split into banned/mrl/alternatives
 
 # Build search index for banned substances (lowercase for matching)
 BANNED_SEARCH_TERMS = [t.lower() for t in BANNED_DB.get("search_terms", [])]

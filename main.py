@@ -47,51 +47,8 @@ logging.basicConfig(
 logger = logging.getLogger("agribloom")
 
 
-class AgriState(TypedDict, total=False):
-    """
-    State schema for the AgriBloom agent pipeline.
-    All agents read from and write to this shared state.
-    """
-    # Input fields
-    user_text: str
-    user_language: str
-    lang: str  # Normalized language code
-    image: Any  # PIL Image
-    image_path: str
-    offline: bool
-    lat: float
-    lon: float
-
-    # Routing and status
-    route: str  # "vision_first" or "knowledge_first"
-    status: str
-    detected_intent: str
-    detected_crop: str
-
-    # Vision agent outputs
-    crop_type: str
-    disease_prediction: dict[str, Any]
-    treatment: str
-
-    # Knowledge agent outputs
-    knowledge: dict[str, Any]
-    recommendations: list[str]
-
-    # Compliance agent outputs
-    compliance: dict[str, Any]
-
-    # Output agent outputs
-    final_response: str
-    voice_output_path: str
-    audit_pdf_path: str
-    bloom_figure: Any
-
-    # Session memory
-    chat_history: list[dict[str, Any]]
-
-    # Metadata
-    allow_path_hints: bool
-    model_dir: str
+# Use plain dict for state — avoids Gradio schema parser issues with TypedDict
+AgriState = dict
 
 
 def _route_after_orchestrator(state: AgriState) -> str:

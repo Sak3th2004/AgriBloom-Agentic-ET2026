@@ -370,7 +370,6 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 response_output = gr.Textbox(
                     lines=14,
                     label="🌾 Diagnosis & Treatment",
-                    show_copy_button=True,
                 )
 
                 voice_output = gr.Audio(label="🔊 Listen to Advice", type="filepath")
@@ -429,7 +428,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         """)
 
         # ── Hidden state ─────────────────────────────────────────────────
-        chat_state = gr.State([])  # conversation history
+        chat_state = gr.State(value=[])  # conversation history
 
         # ── Event Handlers ───────────────────────────────────────────────
         def update_districts(state):
@@ -581,11 +580,11 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         )
 
     # Launch
-    logger.info("Launching AgriBloom UI on http://0.0.0.0:7860")
+    logger.info("Launching AgriBloom UI on http://127.0.0.1:7860")
     demo.launch(
-        server_name="0.0.0.0",
+        server_name="127.0.0.1",
         server_port=7860,
-        share=False,
+        share=True,
         show_error=True,
     )
 
