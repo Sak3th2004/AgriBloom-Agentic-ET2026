@@ -572,10 +572,14 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         def detect_location_from_coords(geo_text):
             """Reverse geocode lat/lon to nearest Indian state/district."""
             if not geo_text or "," not in geo_text:
-                return gr.update(), gr.update(), gr.update(), "❌ Could not detect location"
+                return gr.update(), gr.update(), gr.update(), "❌ Could not detect location. Please select manually."
             try:
                 lat, lon = geo_text.strip().split(",")
                 lat, lon = float(lat), float(lon)
+
+                # Check for invalid coordinates (0,0 means GPS denied/failed)
+                if abs(lat) < 0.1 and abs(lon) < 0.1:
+                    return gr.update(), gr.update(), gr.update(), "❌ Location access denied. Please allow GPS or select manually."
 
                 # Reverse geocode using Nominatim (free, no API key)
                 import urllib.request, json
@@ -655,43 +659,45 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
 
         # Voice transcription
         def transcribe_audio(audio_path, language_name):
-            """Transcribe farmer's voice input using Gemini AI."""
+            """Transcribe farmer's voice — uses Google Speech API (free, no key needed)."""
             if audio_path is None:
                 return ""
             try:
                 lang_code = LANGUAGE_MAP.get(language_name, "en")
-                lang_names = {"en": "English", "hi": "Hindi", "kn": "Kannada",
-                              "te": "Telugu", "ta": "Tamil", "pa": "Punjabi",
-                              "gu": "Gujarati", "mr": "Marathi", "bn": "Bengali", "or": "Odia"}
-                lang_name = lang_names.get(lang_code, "English")
+                lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
+                            "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
+                            "gu": "gu-IN", "mr": "mr-IN", "bn": "bn-IN", "or": "or-IN"}
+                speech_lang = lang_map.get(lang_code, "en-IN")
 
-                from utils.genai_handler import _generate, is_genai_available
-                if is_genai_available():
-                    # Upload audio file to Gemini for transcription
-                    from google import genai as genai_mod
-                    import os
-                    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-                    client = genai_mod.Client(api_key=api_key)
+                import speech_recognition as sr
+                recognizer = sr.Recognizer()
 
-                    # Upload the audio file
-                    audio_file = client.files.upload(file=audio_path)
+                # Try to open the audio file directly
+                try:
+                    with sr.AudioFile(audio_path) as source:
+                        audio = recognizer.record(source)
+                except Exception:
+                    # If format not supported, convert with pydub
+                    import tempfile, os
+                    from pydub import AudioSegment
+                    sound = AudioSegment.from_file(audio_path)
+                    wav_path = os.path.join(tempfile.gettempdir(), "agribloom_voice.wav")
+                    sound.export(wav_path, format="wav")
+                    with sr.AudioFile(wav_path) as source:
+                        audio = recognizer.record(source)
 
-                    prompt = f"""Transcribe this audio recording. The farmer is speaking in {lang_name}.
-                    Return ONLY the transcribed text, nothing else. No quotes, no explanation.
-                    If the audio is unclear, transcribe what you can hear."""
+                text = recognizer.recognize_google(audio, language=speech_lang)
+                logger.info(f"Voice transcribed: '{text[:80]}' (lang={speech_lang})")
+                return text
 
-                    response = client.models.generate_content(
-                        model="gemini-2.0-flash",
-                        contents=[audio_file, prompt],
-                    )
-                    text = response.text.strip()
-                    logger.info(f"Voice transcribed via Gemini: '{text[:50]}...' (lang={lang_code})")
-                    return text
-                else:
-                    return "⚠️ Voice transcription needs internet. Please type your problem."
+            except sr.UnknownValueError:
+                return "⚠️ Could not understand the audio. Please speak clearly and try again."
+            except sr.RequestError as e:
+                logger.error(f"Google Speech API error: {e}")
+                return "⚠️ Speech service unavailable. Please type your problem instead."
             except Exception as e:
                 logger.error(f"Transcription failed: {e}")
-                return f"⚠️ Could not transcribe audio. Please type your problem instead."
+                return f"⚠️ Could not transcribe. Please type your problem instead."
 
         transcribe_btn.click(
             fn=transcribe_audio,

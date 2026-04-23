@@ -108,6 +108,58 @@ def _check_color_variance(image: Image.Image) -> float:
         return 0.5
 
 
+def _detect_skin_tone(image: Image.Image) -> float:
+    """
+    Detect percentage of skin-tone pixels in the image.
+    Uses HSV color space for reliable skin detection across skin tones.
+    Returns ratio (0-1). Selfies typically: 0.3+, Leaves: <0.15
+    """
+    try:
+        img = image.convert("RGB").resize((128, 128))
+        img_array = np.array(img)
+
+        # Convert RGB to HSV manually
+        r, g, b = img_array[:,:,0].astype(float), img_array[:,:,1].astype(float), img_array[:,:,2].astype(float)
+        r, g, b = r/255.0, g/255.0, b/255.0
+
+        max_c = np.maximum(np.maximum(r, g), b)
+        min_c = np.minimum(np.minimum(r, g), b)
+        diff = max_c - min_c
+
+        # Hue calculation
+        hue = np.zeros_like(max_c)
+        mask = diff > 0
+        # Red is max
+        idx = mask & (max_c == r)
+        hue[idx] = (60 * ((g[idx] - b[idx]) / diff[idx]) + 360) % 360
+        # Green is max
+        idx = mask & (max_c == g)
+        hue[idx] = (60 * ((b[idx] - r[idx]) / diff[idx]) + 120) % 360
+        # Blue is max
+        idx = mask & (max_c == b)
+        hue[idx] = (60 * ((r[idx] - g[idx]) / diff[idx]) + 240) % 360
+
+        sat = np.where(max_c > 0, diff / max_c, 0)
+        val = max_c
+
+        # Skin detection rules (works for all skin tones):
+        # Hue: 0-50 (red to yellow range)
+        # Saturation: 0.1-0.8
+        # Value: 0.2-0.95
+        skin_mask = (
+            ((hue >= 0) & (hue <= 50)) &
+            (sat >= 0.1) & (sat <= 0.8) &
+            (val >= 0.2) & (val <= 0.95)
+        )
+
+        skin_ratio = skin_mask.sum() / skin_mask.size
+        return float(skin_ratio)
+
+    except Exception as e:
+        logger.warning(f"Skin tone detection failed: {e}")
+        return 0.0  # Safe default — don't reject
+
+
 def validate_image(
     image: Image.Image | None,
     lang: str = "en",
@@ -156,14 +208,23 @@ def validate_image(
     green_score = _analyze_green_channel(image)
     variance_score = _check_color_variance(image)
 
-    # Decision logic — both conditions must hold for real crop leaves
-    # Selfies/humans have high variance but low green score
-    # Solid backgrounds have low variance
-    is_likely_leaf = green_score >= 0.32 and variance_score >= 0.15
+    # Skin tone detection — detects selfies/human photos
+    skin_ratio = _detect_skin_tone(image)
 
-    # Extra check: if green score is very low, it's definitely not a leaf
-    if green_score < 0.28:
+    # Decision logic:
+    # 1. If skin tone > 40% of image → likely a selfie → reject
+    # 2. If green score very low AND high skin → definitely not a leaf
+    # 3. Otherwise → ACCEPT (let the ML model decide if it's a valid crop)
+    is_likely_leaf = True
+
+    if skin_ratio > 0.40:
+        # More than 40% skin pixels → likely a selfie/human photo
         is_likely_leaf = False
+    elif green_score < 0.25 and variance_score < 0.10:
+        # Very low green AND very uniform → probably a solid background
+        is_likely_leaf = False
+
+    logger.debug(f"Image validation: green={green_score:.3f}, var={variance_score:.3f}, skin={skin_ratio:.3f}, valid={is_likely_leaf}")
 
     if not is_likely_leaf:
         return {
@@ -174,6 +235,7 @@ def validate_image(
             ),
             "green_score": round(green_score, 3),
             "variance_score": round(variance_score, 3),
+            "skin_ratio": round(skin_ratio, 3),
         }
 
     return {
