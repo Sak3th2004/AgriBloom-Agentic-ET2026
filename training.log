@@ -1404,3 +1404,10 @@ C:\Users\saketh\AgriBloom-Agentic-ET2026\utils\train_vision.py:410: FutureWarnin
 2026-04-23 02:18:49,152 [INFO] Training curves saved
 2026-04-23 02:18:49,152 [INFO] Training complete! Best Val Acc: 95.7%
 2026-04-23 02:18:49,152 [INFO] Model saved to: models\checkpoints\efficientnet_b4_indian
+2026-04-23 06:52:04,479 [INFO] Exporting model to ONNX: models/checkpoints/efficientnet_b4_indian/model.onnx
+2026-04-23 06:52:05,073 [INFO] Initialized EfficientNet-B4 from scratch
+2026-04-23 06:52:05,081 [INFO] EfficientNet-B4 configured for 92 classes
+2026-04-23 06:53:07,042 [INFO] Exporting model to ONNX: models/checkpoints/efficientnet_b4_indian/model.onnx
+2026-04-23 06:53:07,637 [INFO] Initialized EfficientNet-B4 from scratch
+2026-04-23 06:53:07,646 [INFO] EfficientNet-B4 configured for 92 classes
+2026-04-23 06:53:11,062 [INFO] ONNX model exported to models/checkpoints/efficientnet_b4_indian/model.onnx

@@ -185,6 +185,61 @@ def _get_seasonal_info(lang_code: str) -> str:
         return ""
 
 
+def _get_farmer_instructions(lang_code: str) -> str:
+    """Get farmer instructions in their language."""
+    instructions = {
+        "en": """**📸 How to take a good photo:**
+1. 🌿 Pick the **most affected leaf** from your crop
+2. ☀️ Take photo in **daylight** (not at night)
+3. 📏 Hold phone **close to the leaf** (20-30 cm)
+4. 🎯 Make sure the **disease spots are visible**
+5. 📱 You can take a **live photo** with camera OR **upload** from gallery
+
+**✅ Good:** Close-up of leaf, disease visible, good light
+**❌ Bad:** Full field view, blurry, too dark, not a plant
+
+**🔄 Steps:** Select language → Take photo → Select state → Click GET ADVICE → Listen 🔊""",
+
+        "hi": """**📸 अच्छी फोटो कैसे लें:**
+1. 🌿 अपनी फसल से **सबसे ज्यादा प्रभावित पत्ती** चुनें
+2. ☀️ **दिन की रोशनी** में फोटो लें (रात में नहीं)
+3. 📏 फोन को **पत्ती के पास** रखें (20-30 सेमी)
+4. 🎯 **रोग के दाग** साफ दिखाई दें
+5. 📱 **कैमरे से तुरंत** फोटो लें या **गैलरी से** अपलोड करें
+
+**✅ सही:** पत्ती का क्लोज-अप, रोग दिखे, अच्छी रोशनी
+**❌ गलत:** पूरा खेत, धुंधली, बहुत अंधेरी
+
+**🔄 तरीका:** भाषा चुनें → फोटो लें → राज्य चुनें → सलाह लें बटन दबाएं → सुनें 🔊""",
+
+        "kn": """**📸 ಉತ್ತಮ ಫೋಟೋ ಹೇಗೆ ತೆಗೆಯುವುದು:**
+1. 🌿 ನಿಮ್ಮ ಬೆಳೆಯಿಂದ **ಹೆಚ್ಚು ಹಾನಿಗೊಳಗಾದ ಎಲೆ** ಆಯ್ಕೆ ಮಾಡಿ
+2. ☀️ **ಹಗಲು ಬೆಳಕಿನಲ್ಲಿ** ಫೋಟೋ ತೆಗೆಯಿರಿ
+3. 📏 ಫೋನ್ ಅನ್ನು **ಎಲೆಗೆ ಹತ್ತಿರ** ಇರಿಸಿ (20-30 ಸೆಂ.ಮೀ)
+4. 🎯 **ರೋಗದ ಚಿಹ್ನೆಗಳು** ಸ್ಪಷ್ಟವಾಗಿ ಕಾಣಲಿ
+5. 📱 **ಕ್ಯಾಮೆರಾ** ಅಥವಾ **ಗ್ಯಾಲರಿ** ಯಿಂದ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ
+
+**🔄 ಹಂತಗಳು:** ಭಾಷೆ ಆಯ್ಕೆ → ಫೋಟೋ → ರಾಜ್ಯ → ಸಲಹೆ ಪಡೆಯಿರಿ → ಕೇಳಿ 🔊""",
+
+        "te": """**📸 మంచి ఫోటో ఎలా తీయాలి:**
+1. 🌿 మీ పంట నుండి **ఎక్కువగా ప్రభావితమైన ఆకు** ఎంచుకోండి
+2. ☀️ **పగటి వెలుతురులో** ఫోటో తీయండి
+3. 📏 ఫోన్‌ను **ఆకుకు దగ్గరగా** పట్టుకోండి
+4. 🎯 **వ్యాధి మచ్చలు** స్పష్టంగా కనిపించాలి
+
+**🔄 స్టెప్స్:** భాష ఎంచుకోండి → ఫోటో → రాష్ట్రం → సలహా పొందండి → వినండి 🔊""",
+
+        "ta": """**📸 நல்ல புகைப்படம் எடுப்பது எப்படி:**
+1. 🌿 உங்கள் பயிரிலிருந்து **மிகவும் பாதிக்கப்பட்ட இலையை** தேர்ந்தெடுக்கவும்
+2. ☀️ **பகல் வெளிச்சத்தில்** புகைப்படம் எடுக்கவும்
+3. 📏 ஃபோனை **இலைக்கு அருகில்** பிடிக்கவும்
+4. 🎯 **நோய் புள்ளிகள்** தெளிவாக தெரிய வேண்டும்
+
+**🔄 படிகள்:** மொழி → புகைப்படம் → மாநிலம் → ஆலோசனை → கேளுங்கள் 🔊""",
+    }
+    return instructions.get(lang_code, instructions["en"])
+
+
 # ── Main UI ──────────────────────────────────────────────────────────────────
 def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
     """Launch the AgriBloom Gradio app."""
@@ -283,6 +338,27 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
 
                 offline_mode = gr.Checkbox(value=False, label="📶 Offline Mode (No Internet)")
 
+                # Farmer Instructions
+                with gr.Accordion("📖 How to Use / कैसे इस्तेमाल करें / ಹೇಗೆ ಬಳಸುವುದು", open=False):
+                    farmer_instructions = gr.Markdown("""
+**📸 How to take a good photo:**
+1. 🌿 Pick the **most affected leaf** from your crop
+2. ☀️ Take photo in **daylight** (not at night)
+3. 📏 Hold phone **close to the leaf** (20-30 cm)
+4. 🎯 Make sure the **disease spots are visible**
+5. 📱 You can take a **live photo** with camera OR **upload** from gallery
+
+**✅ Good photos:** Close-up of leaf, disease visible, good light
+**❌ Bad photos:** Full field view, blurry, too dark, not a plant
+
+**🔄 Steps:**
+1. Select your **language** above
+2. **Take photo** of diseased leaf (camera or upload)
+3. Select your **state and district**
+4. Click **GET ADVICE** button
+5. **Listen** to the voice advice 🔊
+""")
+
                 submit_btn = gr.Button(
                     "🌾 GET ADVICE",
                     variant="primary", size="lg",
@@ -365,6 +441,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             lang_code = LANGUAGE_MAP.get(language_name, "en")
             labels = _get_labels(lang_code)
             seasonal = _get_seasonal_info(lang_code)
+            instructions = _get_farmer_instructions(lang_code)
             return (
                 gr.update(label=labels["upload"]),
                 gr.update(label=labels["describe"], placeholder=labels["placeholder"]),
@@ -372,6 +449,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 gr.update(label=labels["listen"]),
                 gr.update(value=labels["status_ready"]),
                 seasonal,
+                instructions,
             )
 
         def process_query(image, text_value, language_name, state, district, offline, history):
@@ -457,7 +535,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         language.change(
             fn=update_ui_labels,
             inputs=[language],
-            outputs=[image_input, text_input, response_output, voice_output, status_output, seasonal_info],
+            outputs=[image_input, text_input, response_output, voice_output, status_output, seasonal_info, farmer_instructions],
         )
 
         submit_btn.click(
