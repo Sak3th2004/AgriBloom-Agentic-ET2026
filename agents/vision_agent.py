@@ -1,16 +1,14 @@
 """
-Vision Agent - Two-Tier Crop Disease Detection
-Tier 1: EfficientNet-B4 (trained, fast, works offline)
-Tier 2: Gemini Vision API (fallback for unknown crops)
+Vision Agent — Two-tier crop disease detection.
 
-Supports: Cotton, Rice, Wheat, Maize, Sugarcane, Ragi, Tomato, Potato,
-          Pepper, Apple, Grape, Cherry, Peach, Orange, Soybean, Strawberry
-          + ANY crop via Gemini Vision fallback
+Tier 1: EfficientNet-B4 on GPU (92 Indian crop diseases)
+Tier 2: Gemini Vision / Ollama fallback for unknown crops
 """
 from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 from datetime import datetime
 from pathlib import Path
@@ -117,6 +115,14 @@ class EfficientNetEngine:
         confidence = float(probs[idx])
         label = self.id2label.get(idx, f"class_{idx}")
 
+        # ── Entropy-based OOD detection ────────────────────────────────
+        # High entropy = model is unsure = likely out-of-distribution
+        entropy = -float(np.sum(probs * np.log(probs + 1e-10)))
+        max_entropy = math.log(len(probs))  # uniform distribution
+        normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0
+        # If entropy > 0.45, the model is guessing → flag as uncertain
+        is_ood = normalized_entropy > 0.45
+
         # Get top 3
         top3_idx = np.argsort(probs)[-3:][::-1]
         top3 = [
@@ -124,11 +130,26 @@ class EfficientNetEngine:
             for i in top3_idx
         ]
 
+        # Check if top-1 and top-2 are from DIFFERENT crops → uncertain
+        top1_crop = label.split("___")[0].split("_")[0] if "___" in label or "_" in label else label
+        if len(top3) >= 2:
+            top2_label = top3[1]["label"]
+            top2_crop = top2_label.split("___")[0].split("_")[0] if "___" in top2_label or "_" in top2_label else top2_label
+            # If top-2 predictions are from different crops AND close in confidence → uncertain
+            if top1_crop != top2_crop and top3[1]["confidence"] > confidence * 0.5:
+                is_ood = True
+
+        if is_ood:
+            logger.info(f"OOD detected: entropy={normalized_entropy:.3f}, conf={confidence:.2%} → marking uncertain")
+            confidence = min(confidence, 0.30)  # Cap at 30% to trigger fallback
+
         return {
             "label": label,
             "confidence": confidence,
             "class_index": idx,
             "top3": top3,
+            "entropy": round(normalized_entropy, 3),
+            "is_ood": is_ood,
             "source": "efficientnet_b4_gpu" if "cuda" in str(self.device) else "efficientnet_b4_cpu",
         }
 
@@ -349,6 +370,44 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
             logger.warning("Gemini Vision fallback timed out after 15s")
         except Exception as e:
             logger.warning(f"Gemini fallback failed: {e}")
+
+    # ── OOD / Uncertain: Use Ollama for text-based diagnosis ──────────
+    if confidence < CONFIDENCE_THRESHOLD and gemini_result is None and not offline:
+        try:
+            from utils.genai_handler import _ollama_generate
+            top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
+            ood_prompt = (
+                f"An AI crop disease model analyzed a plant leaf image. "
+                f"It gave uncertain results: {top3_text}. "
+                f"The model seems confused. Based on these predictions, "
+                f"what crop and disease is this MOST LIKELY? "
+                f"Reply in exactly this format: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
+            )
+            ollama_result = _ollama_generate(ood_prompt)
+            if ollama_result and "CROP:" in ollama_result.upper():
+                # Parse Ollama response
+                import re
+                crop_match = re.search(r'CROP:\s*([^,\n]+)', ollama_result, re.IGNORECASE)
+                disease_match = re.search(r'DISEASE:\s*([^,\n]+)', ollama_result, re.IGNORECASE)
+                treatment_match = re.search(r'TREATMENT:\s*(.+)', ollama_result, re.IGNORECASE)
+
+                if crop_match and disease_match:
+                    ollama_crop = crop_match.group(1).strip()
+                    ollama_disease = disease_match.group(1).strip()
+                    ollama_treatment = treatment_match.group(1).strip() if treatment_match else ""
+                    pred = {
+                        "label": f"{ollama_crop}___{ollama_disease}".lower().replace(" ", "_"),
+                        "confidence": 0.55,
+                        "source": "ollama_text_diagnosis",
+                        "tier1_label": label,
+                        "tier1_confidence": pred.get("confidence", 0),
+                    }
+                    label = pred["label"]
+                    confidence = pred["confidence"]
+                    gemini_result = {"treatment": ollama_treatment, "crop": ollama_crop, "disease": ollama_disease}
+                    logger.info(f"Ollama diagnosed: {ollama_crop} - {ollama_disease}")
+        except Exception as e:
+            logger.warning(f"Ollama OOD diagnosis failed: {e}")
 
     # ── Apply confidence threshold ───────────────────────────────────────
     if confidence < CONFIDENCE_THRESHOLD and gemini_result is None:

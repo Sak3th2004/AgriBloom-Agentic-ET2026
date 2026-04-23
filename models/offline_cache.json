@@ -40,15 +40,15 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1776923836.4196959,
+    "timestamp": 1776942816.1137576,
     "value": {
-      "temp_c": 33.7,
-      "rain_mm": 0.0,
-      "humidity": 48,
-      "wind_speed": 2.3,
-      "forecast_3day_rain": 2.7,
+      "temp_c": 35.4,
+      "rain_mm": 0.1,
+      "humidity": 31,
+      "wind_speed": 8.6,
+      "forecast_3day_rain": 2.4,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T11:27:16.407556"
+      "timestamp": "2026-04-23T16:43:36.095105"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -132,15 +132,15 @@
     }
   },
   "weather:12.97:77.59": {
-    "timestamp": 1776915569.5826108,
+    "timestamp": 1776924425.6264093,
     "value": {
-      "temp_c": 27.5,
+      "temp_c": 32.7,
       "rain_mm": 0.0,
-      "humidity": 56,
-      "wind_speed": 6.9,
+      "humidity": 37,
+      "wind_speed": 5.4,
       "forecast_3day_rain": 0.0,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T09:09:29.569411"
+      "timestamp": "2026-04-23T11:37:05.614235"
     }
   },
   "market:rice:13.0:77.6": {
@@ -228,17 +228,17 @@
     }
   },
   "market:potato:13.0:77.6": {
-    "timestamp": 1776915569.5980928,
+    "timestamp": 1776924425.6418037,
     "value": {
       "crop": "potato",
-      "modal_price": 1638,
+      "modal_price": 1880,
       "msp": 1650,
       "mandi": "Hassan",
       "state": "Karnataka",
       "distance_km": 165.4,
-      "price_trend": "stable",
+      "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-04-23T09:09:29.585113"
+      "timestamp": "2026-04-23T11:37:05.630120"
     }
   },
   "market:potato:14.5:75.9": {
@@ -256,17 +256,17 @@
     }
   },
   "market:cotton:14.5:75.9": {
-    "timestamp": 1776916606.114819,
+    "timestamp": 1776942816.1362534,
     "value": {
       "crop": "cotton",
-      "modal_price": 6718,
+      "modal_price": 7632,
       "msp": 7121,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "down",
+      "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-04-23T09:26:46.101830"
+      "timestamp": "2026-04-23T16:43:36.120670"
     }
   },
   "market:maize:14.5:75.9": {

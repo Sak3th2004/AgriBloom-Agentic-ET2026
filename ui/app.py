@@ -574,12 +574,13 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             if not geo_text or "," not in geo_text:
                 return gr.update(), gr.update(), gr.update(), "❌ Could not detect location. Please select manually."
             try:
-                lat, lon = geo_text.strip().split(",")
-                lat, lon = float(lat), float(lon)
+                parts = geo_text.strip().split(",")
+                lat, lon = float(parts[0]), float(parts[1])
+                source = "GPS" if len(parts) <= 2 else "IP"
 
-                # Check for invalid coordinates (0,0 means GPS denied/failed)
+                # Check for invalid coordinates (0,0 means all methods failed)
                 if abs(lat) < 0.1 and abs(lon) < 0.1:
-                    return gr.update(), gr.update(), gr.update(), "❌ Location access denied. Please allow GPS or select manually."
+                    return gr.update(), gr.update(), gr.update(), "❌ Location access denied. Please select manually."
 
                 # Reverse geocode using Nominatim (free, no API key)
                 import urllib.request, json
@@ -612,26 +613,33 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     gr.update(value=matched_state),
                     gr.update(choices=INDIAN_LOCATIONS[matched_state], value=matched_district),
                     gr.update(),
-                    f"✅ **Location detected:** {matched_state} → {matched_district}",
+                    f"✅ **Location detected ({source}):** {matched_state} → {matched_district}",
                 )
             except Exception as e:
                 logger.error(f"Geolocation failed: {e}")
                 return gr.update(), gr.update(), gr.update(), f"❌ Location detection failed: {str(e)[:50]}"
 
-        # JS to get browser GPS → write lat,lon into hidden textbox → trigger Python
+        # JS: Try GPS first, then fall back to IP-based geolocation
         geo_js = """
         async () => {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve("0,0");
-                    return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => resolve(pos.coords.latitude + "," + pos.coords.longitude),
-                    (err) => resolve("0,0"),
-                    {timeout: 8000, enableHighAccuracy: false}
-                );
-            });
+            // Try GPS first
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) { reject('no_geo'); return; }
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 5000});
+                });
+                return pos.coords.latitude + "," + pos.coords.longitude;
+            } catch(e) {
+                // GPS failed → use IP-based geolocation
+                try {
+                    const resp = await fetch("https://ipapi.co/json/");
+                    const data = await resp.json();
+                    if (data.latitude && data.longitude) {
+                        return data.latitude + "," + data.longitude + ",ip";
+                    }
+                } catch(e2) {}
+                return "0,0";
+            }
         }
         """
 
@@ -662,7 +670,8 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             """Transcribe farmer's voice — uses Google Speech API (free, no key needed)."""
             if audio_path is None:
                 return ""
-            try:
+
+            def _do_transcribe():
                 lang_code = LANGUAGE_MAP.get(language_name, "en")
                 lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
                             "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
@@ -671,16 +680,20 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
 
                 import speech_recognition as sr
                 recognizer = sr.Recognizer()
+                recognizer.energy_threshold = 300  # Adjust for noisy environments
 
                 # Try to open the audio file directly
                 try:
                     with sr.AudioFile(audio_path) as source:
-                        audio = recognizer.record(source)
+                        audio = recognizer.record(source, duration=30)  # Max 30s
                 except Exception:
                     # If format not supported, convert with pydub
                     import tempfile, os
                     from pydub import AudioSegment
                     sound = AudioSegment.from_file(audio_path)
+                    # Trim to 30s max
+                    if len(sound) > 30000:
+                        sound = sound[:30000]
                     wav_path = os.path.join(tempfile.gettempdir(), "agribloom_voice.wav")
                     sound.export(wav_path, format="wav")
                     with sr.AudioFile(wav_path) as source:
@@ -690,14 +703,20 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 logger.info(f"Voice transcribed: '{text[:80]}' (lang={speech_lang})")
                 return text
 
-            except sr.UnknownValueError:
-                return "⚠️ Could not understand the audio. Please speak clearly and try again."
-            except sr.RequestError as e:
-                logger.error(f"Google Speech API error: {e}")
-                return "⚠️ Speech service unavailable. Please type your problem instead."
+            # Run with timeout to prevent UI freeze
+            try:
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_do_transcribe)
+                    return future.result(timeout=15)
+            except concurrent.futures.TimeoutError:
+                return "⚠️ Transcription timed out. Please try shorter audio."
             except Exception as e:
+                err = str(e)
+                if "UnknownValueError" in err or "could not understand" in err.lower():
+                    return "⚠️ Could not understand. Please speak clearly and try again."
                 logger.error(f"Transcription failed: {e}")
-                return f"⚠️ Could not transcribe. Please type your problem instead."
+                return "⚠️ Could not transcribe. Please type your problem instead."
 
         transcribe_btn.click(
             fn=transcribe_audio,
