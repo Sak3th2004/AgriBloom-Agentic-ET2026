@@ -40,15 +40,15 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1774801488.0388558,
+    "timestamp": 1776911290.5521634,
     "value": {
-      "temp_c": 28.5,
+      "temp_c": 26.0,
       "rain_mm": 0.0,
-      "humidity": 47,
-      "wind_speed": 9.8,
-      "forecast_3day_rain": 1.2,
+      "humidity": 87,
+      "wind_speed": 3.1,
+      "forecast_3day_rain": 2.4,
       "source": "open-meteo",
-      "timestamp": "2026-03-29T21:54:48.024037"
+      "timestamp": "2026-04-23T07:58:10.529991"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -239,6 +239,20 @@
       "price_trend": "up",
       "source": "market_model",
       "timestamp": "2026-04-23T07:41:51.636236"
+    }
+  },
+  "market:potato:14.5:75.9": {
+    "timestamp": 1776911290.5687923,
+    "value": {
+      "crop": "potato",
+      "modal_price": 1893,
+      "msp": 1650,
+      "mandi": "Hassan",
+      "state": "Karnataka",
+      "distance_km": 162.5,
+      "price_trend": "up",
+      "source": "market_model",
+      "timestamp": "2026-04-23T07:58:10.555382"
     }
   }
 }

@@ -25,11 +25,12 @@ logger = logging.getLogger(__name__)
 # Lazy-loaded Gemini model
 _GEMINI_MODEL = None
 _GEMINI_AVAILABLE = None
+_GEMINI_SDK = None  # "new" or "old"
 
 
 def _get_gemini_model():
     """Lazy-load Gemini model."""
-    global _GEMINI_MODEL, _GEMINI_AVAILABLE
+    global _GEMINI_MODEL, _GEMINI_AVAILABLE, _GEMINI_SDK
 
     if _GEMINI_AVAILABLE is False:
         return None
@@ -49,6 +50,7 @@ def _get_gemini_model():
             from google import genai as genai_new
             client = genai_new.Client(api_key=api_key)
             _GEMINI_MODEL = client.models
+            _GEMINI_SDK = "new"
             _GEMINI_AVAILABLE = True
             logger.info("Gemini loaded via google.genai (new SDK)")
             return _GEMINI_MODEL
@@ -59,6 +61,7 @@ def _get_gemini_model():
         import google.generativeai as genai
         genai.configure(api_key=api_key)
         _GEMINI_MODEL = genai.GenerativeModel("gemini-2.0-flash")
+        _GEMINI_SDK = "old"
         _GEMINI_AVAILABLE = True
         logger.info("Gemini 2.0 Flash loaded via google.generativeai")
         return _GEMINI_MODEL
@@ -66,6 +69,35 @@ def _get_gemini_model():
         logger.error(f"Failed to load Gemini model: {e}")
         _GEMINI_AVAILABLE = False
         return None
+
+
+def _generate(prompt: str, image=None) -> str:
+    """Unified Gemini API call — works with both new and old SDK."""
+    model = _get_gemini_model()
+    if model is None:
+        return ""
+
+    try:
+        if _GEMINI_SDK == "new":
+            # New SDK: model.generate_content(model=..., contents=...)
+            contents = [prompt]
+            if image is not None:
+                contents = [image, prompt]
+            response = model.generate_content(
+                model="gemini-2.0-flash",
+                contents=contents,
+            )
+            return response.text.strip()
+        else:
+            # Old SDK: model.generate_content(prompt)
+            if image is not None:
+                response = model.generate_content([image, prompt])
+            else:
+                response = model.generate_content(prompt)
+            return response.text.strip()
+    except Exception as e:
+        logger.error(f"Gemini API call failed: {e}")
+        return ""
 
 
 def is_genai_available() -> bool:
@@ -139,9 +171,9 @@ def generate_treatment_advice(
     Format with bullet points."""
 
     try:
-        response = model.generate_content(prompt)
-        result = response.text.strip()
-        logger.info(f"Gemini treatment advice generated ({len(result)} chars)")
+        result = _generate(prompt)
+        if result:
+            logger.info(f"Gemini treatment advice generated ({len(result)} chars)")
         return result
     except Exception as e:
         logger.error(f"Gemini treatment advice failed: {e}")
@@ -192,8 +224,7 @@ def analyze_unknown_crop(image_path: str, language: str = "en") -> dict[str, Any
     Respond in JSON format ONLY (no markdown):
     {"crop": "...", "disease": "...", "confidence": "high/medium/low", "severity": "mild/moderate/severe", "treatment": "...", "prevention": "..."}"""
 
-        response = model.generate_content([prompt, image])
-        text = response.text.strip()
+        text = _generate(prompt, image=image)
 
         # Parse JSON from response
         # Handle case where response has markdown code blocks
@@ -258,8 +289,7 @@ def analyze_unknown_crop_pil(image, language: str = "en") -> dict[str, Any]:
     Respond in JSON format ONLY:
     {"crop": "...", "disease": "...", "confidence": "high/medium/low", "treatment": "...", "prevention": "..."}"""
 
-        response = model.generate_content([prompt, image])
-        text = response.text.strip()
+        text = _generate(prompt, image=image)
 
         if "```json" in text:
             text = text.split("```json")[1].split("```")[0].strip()
@@ -314,8 +344,7 @@ def generate_audit_narrative(agent_trace: dict, language: str = "en") -> str:
     Write in simple language a farmer can understand."""
 
     try:
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        return _generate(prompt)
     except Exception as e:
         logger.error(f"Audit narrative generation failed: {e}")
         return ""
@@ -375,8 +404,8 @@ def conversational_followup(
     If unsure, suggest visiting nearest KVK."""
 
     try:
-        response = model.generate_content(prompt)
-        return response.text.strip()
+        result = _generate(prompt)
+        return result or "Unable to process. Please consult your local KVK."
     except Exception as e:
         logger.error(f"Conversational followup failed: {e}")
         return "Unable to process question. Please consult your local KVK."

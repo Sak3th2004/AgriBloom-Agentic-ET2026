@@ -410,8 +410,14 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
         "crop_type": state.get("crop_type", "unknown"),
         "compliance_allowed": compliance.get("allowed", True),
         "risk_level": compliance.get("risk_level", "low"),
-        "violations": ", ".join(compliance.get("violations", [])) or "None",
-        "disclaimers": " | ".join(compliance.get("disclaimers", [])[:3]),
+        "violations": ", ".join(
+            v.get("name", str(v)) if isinstance(v, dict) else str(v)
+            for v in compliance.get("violations", [])
+        ) or "None",
+        "disclaimers": " | ".join(
+            d if isinstance(d, str) else str(d)
+            for d in compliance.get("disclaimers", [])[:3]
+        ),
         "recommendations": state.get("recommendations", [])[:5],
         "weather": state.get("knowledge", {}).get("weather", {}),
         "market": state.get("knowledge", {}).get("market", {}),

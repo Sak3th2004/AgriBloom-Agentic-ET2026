@@ -251,10 +251,11 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
     .main-header {
         background: linear-gradient(135deg, #052e16 0%, #166534 50%, #14532d 100%);
         border-radius: 16px; padding: 32px; margin-bottom: 16px;
-        text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        text-align: center; color: #ffffff !important; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
-    .main-header h1 { font-size: 2.2em; margin: 0; font-weight: 700; }
-    .main-header p { opacity: 0.85; margin-top: 8px; font-size: 1.1em; }
+    .main-header h1 { font-size: 2.2em; margin: 0; font-weight: 700; color: #ffffff !important; }
+    .main-header p { opacity: 0.9; margin-top: 8px; font-size: 1.1em; color: #e0f2e0 !important; }
+    .main-header span { color: #ffffff !important; }
     .feature-badges { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
     .feature-badges span {
         background: rgba(255,255,255,0.15); padding: 4px 14px; border-radius: 20px;
@@ -325,6 +326,15 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     label="📝 Describe Problem (Optional)",
                     placeholder="Example: My tomato leaves have brown spots...",
                 )
+
+                with gr.Accordion("🎤 Speak Your Problem / बोलकर बताएं / ಮಾತನಾಡಿ ಹೇಳಿ", open=False):
+                    voice_input = gr.Audio(
+                        label="🎤 Record Voice (speak in your language)",
+                        type="filepath",
+                        sources=["microphone"],
+                    )
+                    transcribe_btn = gr.Button("🎤 Transcribe Voice → Text", size="sm")
+
 
                 with gr.Row():
                     state_input = gr.Dropdown(
@@ -564,6 +574,45 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             fn=handle_followup,
             inputs=[followup_input, language, chat_state],
             outputs=[followup_output],
+        )
+
+        # Voice transcription
+        def transcribe_audio(audio_path, language_name):
+            """Transcribe farmer's voice input using Whisper."""
+            if audio_path is None:
+                return ""
+            try:
+                import whisper
+                model = whisper.load_model("base")
+                lang_code = LANGUAGE_MAP.get(language_name, "en")
+                result = model.transcribe(audio_path, language=lang_code)
+                text = result.get("text", "").strip()
+                logger.info(f"Voice transcribed: '{text[:50]}...' (lang={lang_code})")
+                return text
+            except ImportError:
+                # Fallback: use Google Speech Recognition
+                try:
+                    import speech_recognition as sr
+                    recognizer = sr.Recognizer()
+                    with sr.AudioFile(audio_path) as source:
+                        audio = recognizer.record(source)
+                    lang_code = LANGUAGE_MAP.get(language_name, "en")
+                    lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
+                                "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
+                                "gu": "gu-IN", "mr": "mr-IN", "bn": "bn-IN", "or": "or-IN"}
+                    text = recognizer.recognize_google(audio, language=lang_map.get(lang_code, "en-IN"))
+                    return text
+                except Exception as e2:
+                    logger.error(f"Speech recognition failed: {e2}")
+                    return f"⚠️ Could not transcribe. Please type your problem instead."
+            except Exception as e:
+                logger.error(f"Transcription failed: {e}")
+                return f"⚠️ Transcription error. Please type your problem."
+
+        transcribe_btn.click(
+            fn=transcribe_audio,
+            inputs=[voice_input, language],
+            outputs=[text_input],
         )
 
         # Fertilizer calculator
