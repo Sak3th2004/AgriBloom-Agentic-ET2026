@@ -372,14 +372,16 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
             logger.warning(f"Gemini fallback failed: {e}")
 
     # ── OOD / Uncertain: Use Ollama for text-based diagnosis ──────────
-    if confidence < CONFIDENCE_THRESHOLD and gemini_result is None and not offline:
+    if confidence < CONFIDENCE_THRESHOLD and gemini_result is None:
         try:
             from utils.genai_handler import _ollama_generate
             top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
+            user_context = f"\nThe user also mentioned: '{user_text}'." if user_text else ""
             ood_prompt = (
                 f"An AI crop disease model analyzed a plant leaf image. "
-                f"It gave uncertain results: {top3_text}. "
-                f"The model seems confused. Based on these predictions, "
+                f"It gave confused/uncertain results: {top3_text}. "
+                f"{user_context}\n"
+                f"Based on the user's description and the model's guesses, "
                 f"what crop and disease is this MOST LIKELY? "
                 f"Reply in exactly this format: CROP: <name>, DISEASE: <name>, TREATMENT: <one sentence>"
             )

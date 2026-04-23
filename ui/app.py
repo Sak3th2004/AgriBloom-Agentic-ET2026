@@ -487,10 +487,10 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                         lon=float(lon),
                     )
 
-                # 60s timeout — pipeline must complete in 60 seconds
+                # 120s timeout — pipeline must complete in 120 seconds
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_run)
-                    result = future.result(timeout=60)
+                    result = future.result(timeout=120)
 
                 conf = result.get("disease_prediction", {}).get("confidence", 0)
                 source = result.get("disease_prediction", {}).get("source", "")
@@ -515,9 +515,9 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     new_history,
                 )
             except concurrent.futures.TimeoutError:
-                logger.error("Pipeline timed out after 60 seconds")
+                logger.error("Pipeline timed out after 120 seconds")
                 return (
-                    "⏱️ Analysis is taking too long. Please try again or enable Offline Mode.",
+                    "⏱️ Analysis is taking too long (exceeded 2 minutes). Please try again or enable Offline Mode.",
                     None, None, None,
                     "❌ **Timeout** — Try Offline Mode or retry",
                     history or [],
@@ -579,11 +579,11 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     # Python-side IP Geolocation fallback (works flawlessly for local host)
                     import urllib.request, json
                     try:
-                        req = urllib.request.Request("https://ipapi.co/json/", headers={"User-Agent": "AgriBloom/1.0"})
+                        req = urllib.request.Request("http://ip-api.com/json/", headers={"User-Agent": "AgriBloom/1.0"})
                         with urllib.request.urlopen(req, timeout=5) as resp:
                             ip_data = json.loads(resp.read().decode())
-                            lat = float(ip_data.get("latitude", 0))
-                            lon = float(ip_data.get("longitude", 0))
+                            lat = float(ip_data.get("lat", 0))
+                            lon = float(ip_data.get("lon", 0))
                             source = "IP"
                     except Exception as e:
                         logger.error(f"IP Geo failed: {e}")
@@ -634,10 +634,9 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 logger.error(f"Geolocation failed: {e}")
                 return gr.update(), gr.update(), gr.update(), f"❌ Location detection failed: {str(e)[:50]}"
 
-        # JS: Try GPS first, then fall back to IP-based geolocation
+        # JS: Try GPS first, if it fails, send 0,0 to let Python handle IP-based geolocation
         geo_js = """
         async () => {
-            // Try GPS first
             try {
                 const pos = await new Promise((resolve, reject) => {
                     if (!navigator.geolocation) { reject('no_geo'); return; }
@@ -645,14 +644,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 });
                 return pos.coords.latitude + "," + pos.coords.longitude;
             } catch(e) {
-                // GPS failed → use IP-based geolocation
-                try {
-                    const resp = await fetch("https://ipapi.co/json/");
-                    const data = await resp.json();
-                    if (data.latitude && data.longitude) {
-                        return data.latitude + "," + data.longitude + ",ip";
-                    }
-                } catch(e2) {}
+                // Return 0,0 so Python backend uses its reliable IP-based geolocation
                 return "0,0";
             }
         }
