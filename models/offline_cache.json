@@ -408,5 +408,19 @@
       "source": "market_model",
       "timestamp": "2026-04-24T18:29:04.933380"
     }
+  },
+  "market:**_mango:14.5:75.9": {
+    "timestamp": 1777037313.0952694,
+    "value": {
+      "crop": "**_mango",
+      "modal_price": 1884,
+      "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
+      "price_trend": "down",
+      "source": "market_model",
+      "timestamp": "2026-04-24T18:58:33.095269"
+    }
   }
 }
