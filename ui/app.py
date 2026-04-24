@@ -708,8 +708,8 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 # Load Whisper model (lazy, first call downloads ~150MB model)
                 if _WHISPER_MODEL is None:
                     from faster_whisper import WhisperModel
-                    logger.info("Loading Whisper 'base' model on GPU (first time takes ~10s)...")
-                    _WHISPER_MODEL = WhisperModel("base", device="cuda", compute_type="float16")
+                    logger.info("Loading Whisper 'base' model on CPU...")
+                    _WHISPER_MODEL = WhisperModel("base", device="cpu", compute_type="int8")
                     logger.info("Whisper model loaded successfully!")
 
                 # Transcribe with timeout protection

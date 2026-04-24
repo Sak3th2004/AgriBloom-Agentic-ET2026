@@ -1,18 +1,19 @@
 """
-GenAI Handler — Google Gemini API Integration
-Provides:
-1. LLM-powered farmer-friendly treatment explanations
-2. GenAI Vision fallback for unknown crops
-3. LLM-generated PDF audit narratives
-4. Conversational follow-up with context memory
+GenAI Handler — Multi-backend LLM Integration
+Priority: NVIDIA API (free) → Google Gemini → Local Ollama
 
-Uses gemini-2.0-flash (FREE tier: 15 RPM, 1M tokens/day)
+Backends:
+1. NVIDIA API (build.nvidia.com) — FREE, 1000 calls/day, powerful 70B+ models
+2. Google Gemini 2.0 Flash — FREE tier, 15 RPM (often rate-limited)
+3. Ollama (local) — Zero rate limits, runs on GPU, good fallback
 """
 from __future__ import annotations
 
 import json
 import logging
 import os
+import base64
+import io
 from pathlib import Path
 from typing import Any, Optional
 
@@ -22,12 +23,73 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded Gemini
-_GEMINI_CLIENT = None  # Keep client alive to prevent connection closure
-_GEMINI_AVAILABLE = None
-_GEMINI_SDK = None  # "new" or "old"
-_API_KEY = None
+# ═════════════════════════════════════════════════════════════════════════════
+# NVIDIA API (PRIMARY — free, powerful, reliable)
+# ═════════════════════════════════════════════════════════════════════════════
+_NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "").strip()
+_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
+
+def _nvidia_generate(prompt: str, image=None, model: str = None) -> str:
+    """Call NVIDIA's free API. Supports text AND vision models."""
+    if not _NVIDIA_API_KEY:
+        return ""
+    
+    try:
+        import urllib.request
+        import json as _json
+
+        # Use vision model if image provided, otherwise text model
+        if model is None:
+            model = "meta/llama-3.2-90b-vision-instruct" if image is not None else "meta/llama-3.3-70b-instruct"
+        
+        # Build message content
+        if image is not None:
+            # Convert PIL image to base64
+            buf = io.BytesIO()
+            image.save(buf, format="PNG")
+            img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            
+            content = [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
+            ]
+        else:
+            content = prompt
+
+        payload = _json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": content}],
+            "max_tokens": 1024,
+            "temperature": 0.4,
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            _NVIDIA_BASE_URL,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {_NVIDIA_API_KEY}",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=45) as resp:
+            data = _json.loads(resp.read().decode())
+            text = data["choices"][0]["message"]["content"].strip()
+            if text:
+                logger.info(f"NVIDIA API response ({len(text)} chars, model={model.split('/')[-1]})")
+            return text
+    except Exception as e:
+        logger.warning(f"NVIDIA API failed: {e}")
+        return ""
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Google Gemini (SECONDARY — often rate-limited)
+# ═════════════════════════════════════════════════════════════════════════════
+_GEMINI_CLIENT = None
+_GEMINI_AVAILABLE = None
+_GEMINI_SDK = None
+_API_KEY = None
 
 API_KEYS = [
     os.getenv("GEMINI_API_KEY", "").strip(),
@@ -56,7 +118,6 @@ def _get_gemini_model(force_reinit=False):
     _API_KEY = api_key
 
     try:
-        # Try new google.genai package first
         try:
             from google import genai as genai_new
             _GEMINI_CLIENT = genai_new.Client(api_key=api_key)
@@ -67,7 +128,6 @@ def _get_gemini_model(force_reinit=False):
         except ImportError:
             pass
 
-        # Fall back to deprecated google.generativeai
         import google.generativeai as genai
         genai.configure(api_key=api_key)
         _GEMINI_CLIENT = genai.GenerativeModel("gemini-2.0-flash")
@@ -81,6 +141,9 @@ def _get_gemini_model(force_reinit=False):
         return None
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Ollama (LOCAL FALLBACK — zero rate limits)
+# ═════════════════════════════════════════════════════════════════════════════
 def _ollama_generate(prompt: str) -> str:
     """Fallback: use local Ollama for text generation. Zero rate limits."""
     try:
@@ -91,7 +154,7 @@ def _ollama_generate(prompt: str) -> str:
             "model": "llama3.2:3b",
             "prompt": prompt,
             "stream": False,
-            "options": {"temperature": 0.7, "num_predict": 300},
+            "options": {"temperature": 0.7, "num_predict": 500},
         }).encode("utf-8")
 
         req = urllib.request.Request(
@@ -110,16 +173,21 @@ def _ollama_generate(prompt: str) -> str:
         return ""
 
 
-_GEMINI_COOLDOWN_UNTIL = 0  # timestamp — skip Gemini until this time
+_GEMINI_COOLDOWN_UNTIL = 0
 
 def _generate(prompt: str, image=None) -> str:
-    """Unified LLM call: Gemini first → Ollama fallback. Auto-rotates keys on 429."""
+    """Unified LLM call: NVIDIA → Gemini → Ollama. Auto-rotates on failure."""
     global _CURRENT_KEY_IDX, _GEMINI_COOLDOWN_UNTIL
     import time
-    _get_gemini_model()  # Ensure availability check ran
 
-    # ── Try Gemini first (supports images) ─────────────────────────────
-    # Skip if all keys were recently exhausted (cooldown to save 30s of wasted retries)
+    # ── 1. Try NVIDIA API first (powerful, free, supports vision) ──────
+    if _NVIDIA_API_KEY:
+        result = _nvidia_generate(prompt, image)
+        if result:
+            return result
+
+    # ── 2. Try Gemini (supports images) ────────────────────────────────
+    _get_gemini_model()
     if _GEMINI_AVAILABLE is True and time.time() > _GEMINI_COOLDOWN_UNTIL:
         max_attempts = len(API_KEYS) + 1
         rate_limit_count = 0
@@ -154,40 +222,39 @@ def _generate(prompt: str, image=None) -> str:
                     logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
                     _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
                     _get_gemini_model(force_reinit=True)
-                    # If ALL keys are exhausted, set a 60s cooldown
                     if rate_limit_count >= len(API_KEYS):
                         _GEMINI_COOLDOWN_UNTIL = time.time() + 60
-                        logger.warning("All Gemini keys exhausted — cooldown 60s, using Ollama")
+                        logger.warning("All Gemini keys exhausted — cooldown 60s")
                         break
                     time.sleep(0.5)
                     continue
-                
                 logger.warning(f"Gemini generation failed: {e}")
                 break
     elif _GEMINI_AVAILABLE is True:
-        logger.info("Gemini in cooldown — skipping to Ollama")
+        logger.info("Gemini in cooldown — skipping")
 
-    # ── Fallback to local Ollama (text only, no images) ────────────────
+    # ── 3. Fallback to local Ollama (text only, no images) ─────────────
     if image is None:
         result = _ollama_generate(prompt)
         if result:
             return result
 
-    logger.error("All LLM backends failed (Gemini + Ollama)")
+    logger.error("All LLM backends failed (NVIDIA + Gemini + Ollama)")
     return ""
 
 
 def is_genai_available() -> bool:
-    """Check if any LLM backend is available (Gemini or Ollama)."""
-    _get_gemini_model()
-    if _GEMINI_AVAILABLE is True:
+    """Check if any LLM backend is available (NVIDIA, Gemini, or Ollama)."""
+    if _NVIDIA_API_KEY:
+        return True
+    model = _get_gemini_model()
+    if model is not None:
         return True
     # Check Ollama
     try:
         import urllib.request
-        req = urllib.request.Request("http://localhost:11434/api/tags")
-        with urllib.request.urlopen(req, timeout=2):
-            return True
+        urllib.request.urlopen("http://localhost:11434/api/tags", timeout=3)
+        return True
     except Exception:
         return False
 
@@ -214,8 +281,7 @@ def generate_treatment_advice(
     Returns:
         Natural language treatment advice in farmer's language
     """
-    model = _get_gemini_model()
-    if model is None:
+    if not is_genai_available():
         return ""
 
     lang_names = {
@@ -350,19 +416,24 @@ def analyze_unknown_crop(image_path: str, language: str = "en") -> dict[str, Any
 
 
 def _ollama_vision_analyze(image, prompt: str) -> str:
-    """Use Ollama LLaVA (local vision model) to analyze a crop image.
+    """Analyze crop image using vision AI. 
+    Priority: NVIDIA 90B Vision → Ollama LLaVA (local).
     
-    This is the KEY self-learning feature: llava can SEE any image and diagnose
-    any crop disease, even crops the EfficientNet model was never trained on.
-    Downloads once (~4.7GB), runs locally forever with zero rate limits.
+    This is the KEY self-learning feature: the vision model can SEE any image
+    and diagnose any crop disease, even crops EfficientNet was never trained on.
     """
+    # ── Try NVIDIA Vision first (90B model, extremely accurate) ────────
+    if _NVIDIA_API_KEY:
+        result = _nvidia_generate(prompt, image, model="meta/llama-3.2-90b-vision-instruct")
+        if result:
+            logger.info(f"NVIDIA Vision diagnosed ({len(result)} chars)")
+            return result
+
+    # ── Fallback to Ollama LLaVA (local, works offline) ────────────────
     try:
         import urllib.request
         import json as _json
-        import base64
-        import io
 
-        # Convert PIL Image to base64
         buf = io.BytesIO()
         image.save(buf, format="PNG")
         img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
@@ -523,13 +594,14 @@ def conversational_followup(
     Returns:
         Contextual follow-up response
     """
-    model = _get_gemini_model()
-    if model is None:
-        return "GenAI not available. Please consult your local KVK."
+    if not is_genai_available():
+        return "AI not available. Please consult your local KVK."
 
     lang_names = {
         "en": "English", "hi": "Hindi", "kn": "Kannada",
-        "te": "Telugu", "ta": "Tamil",
+        "te": "Telugu", "ta": "Tamil", "pa": "Punjabi",
+        "gu": "Gujarati", "mr": "Marathi", "bn": "Bengali",
+        "or": "Odia",
     }
 
     # Build conversation context
