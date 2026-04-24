@@ -342,6 +342,7 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     # likely wrong. Force fallback to LLaVA which can actually see the image.
     user_text = state.get("user_text", "").lower()
     force_fallback = False
+    user_mentioned_crop = None
     if user_text and confidence > GEMINI_FALLBACK_THRESHOLD:
         # Known crop names the user might type
         known_crops = [
@@ -387,16 +388,27 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
             top3_text = ", ".join([f"{t['label']}({t['confidence']:.0%})" for t in pred.get("top3", [])])
             user_text = state.get("user_text", "")
             user_hint = f" The farmer says: '{user_text}'." if user_text else ""
-            llava_prompt = (
-                "You are an expert Indian agricultural scientist who specializes in crop disease identification. "
-                "Look at this plant leaf image very carefully. "
-                "You MUST identify the EXACT crop species name. DO NOT say 'leafy green plant' or 'green plant'. "
-                "Instead say the specific name like: Mango, Cotton, Tomato, Rice, Wheat, Potato, Apple, Grape, Sugarcane, Maize, Pepper, Chilli, Banana, Coconut, Groundnut, Soybean, etc. "
-                f"An AI model guessed these (may be wrong): {top3_text}.{user_hint} "
-                "Based on the leaf shape, color, texture and visible symptoms, identify: "
-                "1) The EXACT crop species name 2) The specific disease or pest 3) Treatment "
-                "Reply STRICTLY in this format: CROP: <exact species name>, DISEASE: <specific disease name>, TREATMENT: <one practical sentence>"
-            )
+
+            # If user explicitly named a crop → trust them, only ask for disease
+            if force_fallback and user_mentioned_crop:
+                llava_prompt = (
+                    f"You are an expert Indian agricultural scientist. "
+                    f"The farmer told you this is a {user_mentioned_crop.upper()} leaf. TRUST the farmer — this IS {user_mentioned_crop}. "
+                    f"Look at this {user_mentioned_crop} leaf image carefully. "
+                    f"What disease or pest problem do you see on this {user_mentioned_crop} leaf? "
+                    f"What treatment do you recommend? "
+                    f"Reply STRICTLY: CROP: {user_mentioned_crop.capitalize()}, DISEASE: <specific disease name>, TREATMENT: <one practical sentence>"
+                )
+            else:
+                llava_prompt = (
+                    "You are an expert Indian agricultural scientist. "
+                    "Look at this plant leaf image very carefully. "
+                    "You MUST identify the EXACT crop species: Mango, Watermelon, Cotton, Tomato, Rice, Wheat, Banana, Coconut, Apple, Grape, Sugarcane, Maize, Pepper, Chilli, Groundnut, etc. "
+                    "DO NOT say 'leafy green plant'. Say the EXACT species name. "
+                    f"An AI model guessed (may be wrong): {top3_text}.{user_hint} "
+                    "Reply STRICTLY: CROP: <exact species>, DISEASE: <specific disease>, TREATMENT: <one practical sentence>"
+                )
+            
             llava_text = _ollama_vision_analyze(image, llava_prompt)
             if llava_text and len(llava_text) > 10:
                 import re
@@ -404,13 +416,19 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                 disease_match = re.search(r'DISEASE:\s*([^,\n]+)', llava_text, re.IGNORECASE)
                 treatment_match = re.search(r'TREATMENT:\s*(.+)', llava_text, re.IGNORECASE)
 
+                # If user gave a crop name and LLaVA didn't parse, use user's crop
+                final_crop = user_mentioned_crop.capitalize() if (force_fallback and user_mentioned_crop) else None
+
                 if crop_match and disease_match:
                     vc = crop_match.group(1).strip()
+                    # Override with user's crop if contradiction was detected
+                    if final_crop:
+                        vc = final_crop
                     vd = disease_match.group(1).strip()
                     vt = treatment_match.group(1).strip() if treatment_match else ""
                     pred = {
                         "label": f"{vc}___{vd}".lower().replace(" ", "_"),
-                        "confidence": 0.70,
+                        "confidence": 0.72,
                         "source": "ollama_llava_vision",
                         "tier1_label": label,
                         "tier1_confidence": confidence,
@@ -420,14 +438,21 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     vision_fallback_result = {"treatment": vt, "crop": vc, "disease": vd}
                     logger.info(f"LLaVA Vision diagnosed: {vc} - {vd}")
                 else:
-                    # LLaVA responded but not in expected format — use raw text
-                    vision_fallback_result = {
-                        "treatment": llava_text[:300],
-                        "crop": "identified",
-                        "disease": "see_report",
-                    }
+                    # LLaVA responded but not in expected format
+                    # Use user's crop name if available, otherwise try to extract
+                    diag_crop = final_crop or "Unknown"
+                    # Try to extract disease keywords from freeform text
+                    disease_keywords = ["blight", "spot", "rot", "wilt", "rust", "mildew", "mosaic",
+                                       "anthracnose", "canker", "scab", "aphid", "mite", "whitefly",
+                                       "leaf curl", "yellowing", "necrosis", "fungal", "bacterial"]
+                    found_disease = "Leaf Disease"
+                    for kw in disease_keywords:
+                        if kw in llava_text.lower():
+                            found_disease = kw.title()
+                            break
+                    
                     pred = {
-                        "label": "llava_diagnosis",
+                        "label": f"{diag_crop}___{found_disease}".lower().replace(" ", "_"),
                         "confidence": 0.60,
                         "source": "ollama_llava_vision",
                         "tier1_label": label,
@@ -435,7 +460,8 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     }
                     label = pred["label"]
                     confidence = pred["confidence"]
-                    logger.info(f"LLaVA gave freeform diagnosis ({len(llava_text)} chars)")
+                    vision_fallback_result = {"treatment": llava_text[:300], "crop": diag_crop, "disease": found_disease}
+                    logger.info(f"LLaVA freeform → {diag_crop} - {found_disease}")
         except Exception as e:
             logger.warning(f"LLaVA Vision fallback failed: {e}")
 

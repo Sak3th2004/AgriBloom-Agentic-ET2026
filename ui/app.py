@@ -674,50 +674,71 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             outputs=[followup_output],
         )
 
-        # Voice transcription (Python backend fallback)
+        # ── Voice transcription using LOCAL Whisper AI (runs on GPU, no internet!) ──
+        _WHISPER_MODEL = None  # Lazy-loaded singleton
+
         def transcribe_audio(audio_path, language_name):
-            """Transcribe farmer's voice — Python fallback using Google Speech API."""
+            """Transcribe farmer's voice using Whisper AI — runs 100% locally on GPU."""
+            nonlocal _WHISPER_MODEL
             if audio_path is None:
-                return "⚠️ No audio recorded. Please click the microphone icon, speak, then click again to stop."
+                return "⚠️ No audio recorded. Click the mic icon, speak, click again to stop, then click Transcribe."
 
             try:
-                lang_code = LANGUAGE_MAP.get(language_name, "en")
-                lang_map = {"en": "en-IN", "hi": "hi-IN", "kn": "kn-IN",
-                            "te": "te-IN", "ta": "ta-IN", "pa": "pa-IN",
-                            "gu": "gu-IN", "mr": "mr-IN", "bn": "bn-IN", "or": "or-IN"}
-                speech_lang = lang_map.get(lang_code, "en-IN")
-
-                import speech_recognition as sr
                 import soundfile as sf
                 import tempfile
                 import os
 
-                recognizer = sr.Recognizer()
-                recognizer.energy_threshold = 200
-                recognizer.dynamic_energy_threshold = True
-
-                # Convert to standard 16-bit PCM WAV
-                pcm_wav_path = os.path.join(tempfile.gettempdir(), "agribloom_pcm.wav")
+                # Convert to standard 16-bit PCM WAV (Whisper needs clean audio)
+                pcm_wav_path = os.path.join(tempfile.gettempdir(), "agribloom_whisper.wav")
                 data, samplerate = sf.read(audio_path)
-                # Ensure mono
                 if len(data.shape) > 1:
-                    data = data.mean(axis=1)
+                    data = data.mean(axis=1)  # Ensure mono
                 sf.write(pcm_wav_path, data, samplerate, subtype='PCM_16')
-                logger.info(f"Audio converted: {len(data)} samples at {samplerate}Hz")
+                logger.info(f"Audio for Whisper: {len(data)} samples at {samplerate}Hz, duration={len(data)/samplerate:.1f}s")
 
-                with sr.AudioFile(pcm_wav_path) as source:
-                    recognizer.adjust_for_ambient_noise(source, duration=0.5)
-                    audio = recognizer.record(source, duration=30)
+                # Map UI language to Whisper language code
+                lang_code = LANGUAGE_MAP.get(language_name, "en")
+                whisper_lang_map = {
+                    "en": "en", "hi": "hi", "kn": "kn", "te": "te",
+                    "ta": "ta", "pa": "pa", "gu": "gu", "mr": "mr",
+                    "bn": "bn", "or": "or",
+                }
+                whisper_lang = whisper_lang_map.get(lang_code, "en")
 
-                text = recognizer.recognize_google(audio, language=speech_lang)
-                logger.info(f"Voice transcribed: '{text[:80]}' (lang={speech_lang})")
-                return text
+                # Load Whisper model (lazy, first call downloads ~150MB model)
+                if _WHISPER_MODEL is None:
+                    from faster_whisper import WhisperModel
+                    logger.info("Loading Whisper 'base' model on GPU (first time takes ~10s)...")
+                    _WHISPER_MODEL = WhisperModel("base", device="cuda", compute_type="float16")
+                    logger.info("Whisper model loaded successfully!")
+
+                # Transcribe with timeout protection
+                def _do_whisper():
+                    segments, info = _WHISPER_MODEL.transcribe(
+                        pcm_wav_path,
+                        language=whisper_lang,
+                        beam_size=5,
+                        vad_filter=True,  # Skip silence
+                    )
+                    text = " ".join([seg.text.strip() for seg in segments])
+                    return text
+
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_do_whisper)
+                    text = future.result(timeout=30)
+
+                if text and text.strip():
+                    logger.info(f"Whisper transcribed: '{text[:80]}' (lang={whisper_lang})")
+                    return text.strip()
+                else:
+                    return "⚠️ Could not hear speech. Please speak louder and closer to mic."
+
+            except concurrent.futures.TimeoutError:
+                return "⚠️ Transcription timed out. Please record shorter audio (under 15 seconds)."
             except Exception as e:
-                err_name = type(e).__name__
-                logger.error(f"Transcription error [{err_name}]: {e}")
-                if "UnknownValueError" in err_name:
-                    return "⚠️ Could not understand speech. Please speak clearly and try again."
-                return f"⚠️ Transcription failed ({err_name}). Use the 🎙️ Live Mic button below instead."
+                logger.error(f"Whisper transcription error: {e}")
+                return f"⚠️ Transcription error. Please try recording again."
 
         transcribe_btn.click(
             fn=transcribe_audio,
