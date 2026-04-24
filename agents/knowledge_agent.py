@@ -6,6 +6,7 @@ Supports Indian regional languages
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from typing import Any, Optional
 
@@ -245,16 +246,51 @@ RESPONSE_TEMPLATES = {
 
 
 def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
-    """Fetch real-time weather from Open-Meteo API."""
+    """Fetch weather: OpenWeatherMap (rich) → Open-Meteo (free fallback)."""
     cache_key = f"weather:{lat:.2f}:{lon:.2f}"
 
     if offline:
-        cached = CACHE.get(cache_key, ttl_seconds=86400)  # 24h cache
+        cached = CACHE.get(cache_key, ttl_seconds=86400)
         if cached:
             cached["source"] = "offline_cache"
             return cached
         return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "offline_default"}
 
+    # ── Try OpenWeatherMap first (better data) ──
+    owm_key = os.environ.get("OPENWEATHER_API_KEY", "").strip()
+    if owm_key:
+        try:
+            url = (
+                f"https://api.openweathermap.org/data/2.5/weather?"
+                f"lat={lat}&lon={lon}&appid={owm_key}&units=metric"
+            )
+            response = requests.get(url, timeout=8)
+            response.raise_for_status()
+            data = response.json()
+
+            main = data.get("main", {})
+            wind = data.get("wind", {})
+            weather_desc = data.get("weather", [{}])[0].get("description", "")
+            rain = data.get("rain", {}).get("1h", 0.0)
+
+            result = {
+                "temp_c": round(main.get("temp", 28), 1),
+                "feels_like": round(main.get("feels_like", 28), 1),
+                "rain_mm": round(rain, 1),
+                "humidity": main.get("humidity", 65),
+                "wind_speed": round(wind.get("speed", 5.0), 1),
+                "weather_desc": weather_desc.title(),
+                "forecast_3day_rain": 0,
+                "source": "openweathermap",
+                "timestamp": datetime.now().isoformat(),
+            }
+            CACHE.set(cache_key, result)
+            logger.info(f"OpenWeatherMap: {result['temp_c']}°C, {weather_desc}, humidity={result['humidity']}%")
+            return result
+        except Exception as e:
+            logger.warning(f"OpenWeatherMap failed: {e}, trying Open-Meteo")
+
+    # ── Fallback: Open-Meteo (free, no key) ──
     try:
         url = (
             f"https://api.open-meteo.com/v1/forecast?"

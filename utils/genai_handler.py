@@ -302,33 +302,32 @@ def generate_treatment_advice(
     """
 
     prompt = f"""You are an expert Indian agricultural scientist (Krishi Vigyan Kendra advisor).
+    You MUST respond ENTIRELY in {lang_name} language. Every single word must be in {lang_name}.
 
     A farmer in {region}, India has {crop} affected by {disease}.
     Current season: {season}.
     {context_section}
-    Give advice in SIMPLE language that an uneducated farmer can understand:
-    1. What is this disease? (2 sentences, no scientific jargon)
-    2. Immediate action to take TODAY
-    3. Safe treatment options (ONLY treatments approved by ICAR India)
-    4. Prevention for next season
-    5. When to harvest after treatment (waiting period)
+    Give DETAILED advice that a farmer can act on immediately:
+    1. 🌿 What disease is this? (explain in simple words, no English jargon)
+    2. ⚡ Immediate action to take TODAY
+    3. 💊 Exact treatment: Name the specific pesticide/fungicide, dosage per liter of water, spray interval
+       - Give 2 options: one chemical, one organic (Neem oil, Trichoderma, Pseudomonas)
+    4. 🧪 Exact fertilizer to apply: NPK ratio, urea amount per acre
+    5. 🛡️ Prevention for next season
+    6. ⏰ When to harvest after treatment (waiting period in days)
 
-    IMPORTANT: Do NOT recommend any banned pesticides in India.
-    If Endosulfan, Monocrotophos, Methyl Parathion, Phorate, Dichlorvos,
-    or any banned chemical would normally be recommended, suggest
-    organic/bio alternatives instead (Neem oil, Trichoderma, etc.)
+    IMPORTANT: Do NOT recommend banned pesticides (Endosulfan, Monocrotophos, Methyl Parathion, Phorate).
+    Use ICAR-approved treatments only.
 
-    Respond in {lang_name} language.
-    Keep each point under 30 words. Use simple vocabulary.
-    Format with bullet points."""
+    CRITICAL: Write your ENTIRE response in {lang_name}. NOT in English. Every word in {lang_name}."""
 
     try:
         result = _generate(prompt)
         if result:
-            logger.info(f"Gemini treatment advice generated ({len(result)} chars)")
+            logger.info(f"Treatment advice generated ({len(result)} chars)")
         return result
     except Exception as e:
-        logger.error(f"Gemini treatment advice failed: {e}")
+        logger.error(f"Treatment advice failed: {e}")
         return ""
 
 

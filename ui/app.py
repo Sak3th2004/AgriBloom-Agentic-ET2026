@@ -327,16 +327,25 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     placeholder="Example: My tomato leaves have brown spots...",
                 )
 
-                with gr.Accordion("🎤 Speak Your Problem / बोलकर बताएं / ಮಾತನಾಡಿ ಹೇಳಿ", open=False):
+                # ── Quick Problem Buttons (for farmers who can't type) ──
+                gr.Markdown("**🖐️ Tap Your Problem / समस्या चुनें / సమస్య ఎంచుకోండి:**")
+                with gr.Row():
+                    prob_btn1 = gr.Button("🍂 Leaf Spots", size="sm")
+                    prob_btn2 = gr.Button("🟡 Yellow Leaves", size="sm")
+                    prob_btn3 = gr.Button("🐛 Insects/Pests", size="sm")
+                with gr.Row():
+                    prob_btn4 = gr.Button("🍄 White Fungus", size="sm")
+                    prob_btn5 = gr.Button("🥀 Wilting/Drying", size="sm")
+                    prob_btn6 = gr.Button("🌿 Healthy Check", size="sm")
+
+                with gr.Accordion("🎤 Record Voice / आवाज़ रिकॉर्ड करें", open=False):
                     voice_input = gr.Audio(
-                        label="🎤 Record Voice (speak in your language)",
+                        label="🎤 Record (speak → stop → click Transcribe)",
                         type="filepath",
                         format="wav",
                         sources=["microphone"],
                     )
-                    transcribe_btn = gr.Button("🎤 Transcribe Recorded Audio → Text", size="sm")
-                    gr.Markdown("**— OR use instant browser mic (recommended) —**")
-                    live_mic_btn = gr.Button("🎙️ Live Mic — Speak Now (works instantly!)", size="sm", variant="primary")
+                    transcribe_btn = gr.Button("🎤 Transcribe Recorded Audio → Text", size="sm", variant="primary")
 
 
                 with gr.Row():
@@ -746,69 +755,13 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             outputs=[text_input],
         )
 
-        # ── JavaScript Live Mic (Browser Web Speech API — instant, no backend) ──
-        # This is the PRIMARY transcription method. It works directly in the browser
-        # using the Web Speech API. No file conversion, no API keys, no backend calls.
-        live_mic_js = """
-        async (lang) => {
-            const langMap = {
-                'English': 'en-IN', 'Hindi / हिंदी': 'hi-IN',
-                'Kannada / ಕನ್ನಡ': 'kn-IN', 'Telugu / తెలుగు': 'te-IN',
-                'Tamil / தமிழ்': 'ta-IN', 'Punjabi / ਪੰਜਾਬੀ': 'pa-IN',
-                'Gujarati / ગુજરાતી': 'gu-IN', 'Marathi / मराठी': 'mr-IN',
-                'Bengali / বাংলা': 'bn-IN', 'Odia / ଓଡ଼ିଆ': 'or-IN'
-            };
-            const speechLang = langMap[lang] || 'en-IN';
-
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                return '⚠️ Your browser does not support speech recognition. Use Chrome.';
-            }
-
-            return new Promise((resolve) => {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.lang = speechLang;
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
-
-                recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript;
-                    resolve(text);
-                };
-                recognition.onerror = (event) => {
-                    if (event.error === 'network') {
-                        resolve('⚠️ Live Mic needs internet. Please use the Record button above instead, or type your problem.');
-                    } else if (event.error === 'not-allowed') {
-                        resolve('⚠️ Microphone permission denied. Please allow mic access in your browser settings.');
-                    } else if (event.error === 'no-speech') {
-                        resolve('⚠️ No speech heard. Please speak louder and try again.');
-                    } else {
-                        resolve('⚠️ Mic error: ' + event.error + '. Use the Record button above instead.');
-                    }
-                };
-                recognition.onend = () => {
-                    // If no result was returned
-                };
-
-                // Start — browser will show mic permission popup
-                recognition.start();
-
-                // Timeout after 10 seconds
-                setTimeout(() => {
-                    recognition.stop();
-                    resolve('⚠️ No speech detected. Please speak and try again.');
-                }, 10000);
-            });
-        }
-        """
-
-        live_mic_btn.click(
-            fn=None,
-            inputs=[language],
-            outputs=[text_input],
-            js=live_mic_js,
-        )
+        # ── Quick Problem Buttons (auto-fill text for farmers who can't type) ──
+        prob_btn1.click(fn=lambda: "My crop leaves have brown/black spots on them", inputs=None, outputs=[text_input])
+        prob_btn2.click(fn=lambda: "My crop leaves are turning yellow and dying", inputs=None, outputs=[text_input])
+        prob_btn3.click(fn=lambda: "I see insects and pests attacking my crop", inputs=None, outputs=[text_input])
+        prob_btn4.click(fn=lambda: "White fungus or powder on my crop leaves", inputs=None, outputs=[text_input])
+        prob_btn5.click(fn=lambda: "My crop plants are wilting and drying up", inputs=None, outputs=[text_input])
+        prob_btn6.click(fn=lambda: "Check if my crop is healthy", inputs=None, outputs=[text_input])
 
         # Fertilizer calculator
         def calc_fertilizer(crop_name, area, soil):

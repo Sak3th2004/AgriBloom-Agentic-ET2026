@@ -396,17 +396,17 @@
     }
   },
   "market:melon:14.5:75.9": {
-    "timestamp": 1776992296.9702947,
+    "timestamp": 1777035544.9338977,
     "value": {
       "crop": "melon",
-      "modal_price": 2204,
+      "modal_price": 2010,
       "msp": 2000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "up",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-24T06:28:16.968772"
+      "timestamp": "2026-04-24T18:29:04.933380"
     }
   }
 }

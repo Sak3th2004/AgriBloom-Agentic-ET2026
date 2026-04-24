@@ -5,6 +5,7 @@ Creates compliance audit logs in PDF format using ReportLab
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -21,8 +22,23 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 logger = logging.getLogger(__name__)
+
+# Register Nirmala UI font for Indian language support (Telugu, Kannada, Hindi, etc.)
+_FONT_REGISTERED = False
+_UNICODE_FONT = "Helvetica"  # Fallback
+try:
+    nirmala_path = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "Nirmala.ttc")
+    if os.path.exists(nirmala_path):
+        pdfmetrics.registerFont(TTFont("NirmalaUI", nirmala_path, subfontIndex=0))
+        _UNICODE_FONT = "NirmalaUI"
+        _FONT_REGISTERED = True
+        logger.info("Nirmala UI font registered for Indian language PDF support")
+except Exception as e:
+    logger.warning(f"Could not register Nirmala UI font: {e}")
 
 # Custom colors matching AgriBloom theme
 AGRI_GREEN = colors.HexColor("#166534")
@@ -35,85 +51,67 @@ AGRI_ERROR = colors.HexColor("#ef4444")
 def _create_custom_styles() -> dict[str, ParagraphStyle]:
     """Create custom paragraph styles for the report."""
     base_styles = getSampleStyleSheet()
+    fn = _UNICODE_FONT  # Unicode font for Indian languages
 
     custom_styles = {
         "CustomTitle": ParagraphStyle(
             "CustomTitle",
             parent=base_styles["Title"],
-            fontSize=24,
-            textColor=AGRI_GREEN,
-            spaceAfter=20,
-            alignment=1,  # Center
+            fontName=fn, fontSize=24,
+            textColor=AGRI_GREEN, spaceAfter=20, alignment=1,
         ),
         "CustomSubtitle": ParagraphStyle(
             "CustomSubtitle",
             parent=base_styles["Normal"],
-            fontSize=12,
-            textColor=colors.gray,
-            spaceAfter=30,
-            alignment=1,
+            fontName=fn, fontSize=12,
+            textColor=colors.gray, spaceAfter=30, alignment=1,
         ),
         "SectionHeader": ParagraphStyle(
             "SectionHeader",
             parent=base_styles["Heading2"],
-            fontSize=14,
-            textColor=AGRI_GREEN,
-            spaceBefore=15,
-            spaceAfter=10,
-            borderPadding=5,
+            fontName=fn, fontSize=14,
+            textColor=AGRI_GREEN, spaceBefore=15, spaceAfter=10, borderPadding=5,
         ),
         "FieldLabel": ParagraphStyle(
             "FieldLabel",
             parent=base_styles["Normal"],
-            fontSize=10,
-            textColor=colors.gray,
+            fontName=fn, fontSize=10, textColor=colors.gray,
         ),
         "FieldValue": ParagraphStyle(
             "FieldValue",
             parent=base_styles["Normal"],
-            fontSize=11,
-            textColor=colors.black,
-            spaceBefore=2,
-            spaceAfter=8,
+            fontName=fn, fontSize=11,
+            textColor=colors.black, spaceBefore=2, spaceAfter=8,
         ),
         "WarningText": ParagraphStyle(
             "WarningText",
             parent=base_styles["Normal"],
-            fontSize=10,
-            textColor=AGRI_WARNING,
-            backColor=colors.HexColor("#fef3c7"),
-            borderPadding=8,
+            fontName=fn, fontSize=10,
+            textColor=AGRI_WARNING, backColor=colors.HexColor("#fef3c7"), borderPadding=8,
         ),
         "ErrorText": ParagraphStyle(
             "ErrorText",
             parent=base_styles["Normal"],
-            fontSize=10,
-            textColor=AGRI_ERROR,
-            backColor=colors.HexColor("#fee2e2"),
-            borderPadding=8,
+            fontName=fn, fontSize=10,
+            textColor=AGRI_ERROR, backColor=colors.HexColor("#fee2e2"), borderPadding=8,
         ),
         "SuccessText": ParagraphStyle(
             "SuccessText",
             parent=base_styles["Normal"],
-            fontSize=10,
-            textColor=AGRI_GREEN,
-            backColor=AGRI_GREEN_BG,
-            borderPadding=8,
+            fontName=fn, fontSize=10,
+            textColor=AGRI_GREEN, backColor=AGRI_GREEN_BG, borderPadding=8,
         ),
         "Disclaimer": ParagraphStyle(
             "Disclaimer",
             parent=base_styles["Normal"],
-            fontSize=8,
-            textColor=colors.gray,
-            spaceBefore=20,
-            leading=12,
+            fontName=fn, fontSize=8,
+            textColor=colors.gray, spaceBefore=20, leading=12,
         ),
         "Footer": ParagraphStyle(
             "Footer",
             parent=base_styles["Normal"],
-            fontSize=8,
-            textColor=colors.gray,
-            alignment=1,
+            fontName=fn, fontSize=8,
+            textColor=colors.gray, alignment=1,
         ),
     }
 
