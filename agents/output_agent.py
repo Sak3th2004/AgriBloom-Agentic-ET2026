@@ -241,10 +241,15 @@ def _format_response(state: dict[str, Any], lang: str = "en") -> str:
 
     lines.append("")
 
-    # Weather info
-    lines.append(
-        f"🌤️ {templates['weather'].format(temp=weather.get('temp_c', 'N/A'), rain=weather.get('rain_mm', 0))}"
-    )
+    # Weather info (enriched with OpenWeatherMap data)
+    weather_line = f"🌤️ {templates['weather'].format(temp=weather.get('temp_c', 'N/A'), rain=weather.get('rain_mm', 0))}"
+    if weather.get("weather_desc"):
+        weather_line += f" ({weather['weather_desc']})"
+    if weather.get("humidity"):
+        weather_line += f", 💧 {weather['humidity']}%"
+    if weather.get("wind_speed"):
+        weather_line += f", 💨 {weather['wind_speed']}km/h"
+    lines.append(weather_line)
 
     # Only show market info for valid crop detection
     if disease_label not in ["uncertain_detection", "unknown", "error"]:
@@ -257,11 +262,21 @@ def _format_response(state: dict[str, Any], lang: str = "en") -> str:
     # Recommended actions
     lines.append(f"📋 {templates['actions']}")
 
-    # Add treatment first
+    # Add FULL treatment advice (from NVIDIA 70B model) with proper formatting
     if treatment:
-        lines.append(f"   💊 {treatment}")
+        # Split multi-line treatment into properly indented lines
+        treatment_lines = treatment.strip().split("\n")
+        for tline in treatment_lines:
+            tline = tline.strip()
+            if tline:
+                if tline.startswith(("•", "-", "*", "●")):
+                    lines.append(f"   {tline}")
+                elif tline[0:1].isdigit():
+                    lines.append(f"   {tline}")
+                else:
+                    lines.append(f"   💊 {tline}")
 
-    # Add other recommendations (filter out market-related if unknown crop)
+    # Add other recommendations
     for i, rec in enumerate(recommendations[:5], 1):
         if disease_label in ["uncertain_detection", "unknown"] and "market" in rec.lower():
             continue

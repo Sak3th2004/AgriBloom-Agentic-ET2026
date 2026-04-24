@@ -443,15 +443,6 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     prob_btn5 = gr.Button("🥀 Wilting/Drying", size="sm")
                     prob_btn6 = gr.Button("🌿 Healthy Check", size="sm")
 
-                with gr.Accordion("🎤 Record Voice / आवाज़ रिकॉर्ड करें", open=False):
-                    voice_input = gr.Audio(
-                        label="🎤 Record (speak → stop → click Transcribe)",
-                        type="filepath",
-                        format="wav",
-                        sources=["microphone"],
-                    )
-                    transcribe_btn = gr.Button("🎤 Transcribe Recorded Audio → Text", size="sm", variant="primary")
-
 
                 with gr.Row():
                     state_input = gr.Dropdown(
@@ -790,77 +781,6 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             outputs=[followup_output],
         )
 
-        # ── Voice transcription using LOCAL Whisper AI (runs on GPU, no internet!) ──
-        _WHISPER_MODEL = None  # Lazy-loaded singleton
-
-        def transcribe_audio(audio_path, language_name):
-            """Transcribe farmer's voice using Whisper AI — runs 100% locally on GPU."""
-            nonlocal _WHISPER_MODEL
-            if audio_path is None:
-                return "⚠️ No audio recorded. Click the mic icon, speak, click again to stop, then click Transcribe."
-
-            try:
-                import soundfile as sf
-                import tempfile
-                import os
-
-                # Convert to standard 16-bit PCM WAV (Whisper needs clean audio)
-                pcm_wav_path = os.path.join(tempfile.gettempdir(), "agribloom_whisper.wav")
-                data, samplerate = sf.read(audio_path)
-                if len(data.shape) > 1:
-                    data = data.mean(axis=1)  # Ensure mono
-                sf.write(pcm_wav_path, data, samplerate, subtype='PCM_16')
-                logger.info(f"Audio for Whisper: {len(data)} samples at {samplerate}Hz, duration={len(data)/samplerate:.1f}s")
-
-                # Map UI language to Whisper language code
-                lang_code = LANGUAGE_MAP.get(language_name, "en")
-                whisper_lang_map = {
-                    "en": "en", "hi": "hi", "kn": "kn", "te": "te",
-                    "ta": "ta", "pa": "pa", "gu": "gu", "mr": "mr",
-                    "bn": "bn", "or": "or",
-                }
-                whisper_lang = whisper_lang_map.get(lang_code, "en")
-
-                # Load Whisper model (lazy, first call downloads ~150MB model)
-                if _WHISPER_MODEL is None:
-                    from faster_whisper import WhisperModel
-                    logger.info("Loading Whisper 'base' model on CPU...")
-                    _WHISPER_MODEL = WhisperModel("base", device="cpu", compute_type="int8")
-                    logger.info("Whisper model loaded successfully!")
-
-                # Transcribe with timeout protection
-                def _do_whisper():
-                    segments, info = _WHISPER_MODEL.transcribe(
-                        pcm_wav_path,
-                        language=whisper_lang,
-                        beam_size=5,
-                        vad_filter=True,  # Skip silence
-                    )
-                    text = " ".join([seg.text.strip() for seg in segments])
-                    return text
-
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(_do_whisper)
-                    text = future.result(timeout=30)
-
-                if text and text.strip():
-                    logger.info(f"Whisper transcribed: '{text[:80]}' (lang={whisper_lang})")
-                    return text.strip()
-                else:
-                    return "⚠️ Could not hear speech. Please speak louder and closer to mic."
-
-            except concurrent.futures.TimeoutError:
-                return "⚠️ Transcription timed out. Please record shorter audio (under 15 seconds)."
-            except Exception as e:
-                logger.error(f"Whisper transcription error: {e}")
-                return f"⚠️ Transcription error. Please try recording again."
-
-        transcribe_btn.click(
-            fn=transcribe_audio,
-            inputs=[voice_input, language],
-            outputs=[text_input],
-        )
 
         # ── Quick Problem Buttons (auto-fill text for farmers who can't type) ──
         prob_btn1.click(fn=lambda: "My crop leaves have brown/black spots on them", inputs=None, outputs=[text_input])
