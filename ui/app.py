@@ -756,7 +756,15 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     resolve(text);
                 };
                 recognition.onerror = (event) => {
-                    resolve('⚠️ Speech error: ' + event.error + '. Please try again.');
+                    if (event.error === 'network') {
+                        resolve('⚠️ Live Mic needs internet. Please use the Record button above instead, or type your problem.');
+                    } else if (event.error === 'not-allowed') {
+                        resolve('⚠️ Microphone permission denied. Please allow mic access in your browser settings.');
+                    } else if (event.error === 'no-speech') {
+                        resolve('⚠️ No speech heard. Please speak louder and try again.');
+                    } else {
+                        resolve('⚠️ Mic error: ' + event.error + '. Use the Record button above instead.');
+                    }
                 };
                 recognition.onend = () => {
                     // If no result was returned

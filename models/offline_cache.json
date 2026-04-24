@@ -40,15 +40,15 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1776961205.3524816,
+    "timestamp": 1776990341.610882,
     "value": {
-      "temp_c": 27.8,
+      "temp_c": 25.1,
       "rain_mm": 0.0,
-      "humidity": 67,
-      "wind_speed": 9.5,
-      "forecast_3day_rain": 2.4,
+      "humidity": 94,
+      "wind_speed": 4.2,
+      "forecast_3day_rain": 0.9999999999999999,
       "source": "open-meteo",
-      "timestamp": "2026-04-23T21:50:05.331109"
+      "timestamp": "2026-04-24T05:55:41.595829"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -256,31 +256,31 @@
     }
   },
   "market:cotton:14.5:75.9": {
-    "timestamp": 1776961026.8826263,
+    "timestamp": 1776990662.3264685,
     "value": {
       "crop": "cotton",
-      "modal_price": 8015,
+      "modal_price": 6647,
       "msp": 7121,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "up",
+      "price_trend": "down",
       "source": "market_model",
-      "timestamp": "2026-04-23T21:47:06.868211"
+      "timestamp": "2026-04-24T06:01:02.326468"
     }
   },
   "market:maize:14.5:75.9": {
-    "timestamp": 1776912991.0066433,
+    "timestamp": 1776990341.6291716,
     "value": {
       "crop": "maize",
-      "modal_price": 2348,
+      "modal_price": 2228,
       "msp": 2225,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "up",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-23T08:26:30.993250"
+      "timestamp": "2026-04-24T05:55:41.614565"
     }
   },
   "market:uncertain:14.5:75.9": {
@@ -365,6 +365,20 @@
       "price_trend": "up",
       "source": "market_model",
       "timestamp": "2026-04-23T21:50:05.355746"
+    }
+  },
+  "market:mango:14.5:75.9": {
+    "timestamp": 1776961796.6168504,
+    "value": {
+      "crop": "mango",
+      "modal_price": 1919,
+      "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-04-23T21:59:56.602297"
     }
   }
 }

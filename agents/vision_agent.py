@@ -336,6 +336,39 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     label = pred.get("label", "unknown")
     confidence = pred.get("confidence", 0.0)
 
+    # ── User-text contradiction check ────────────────────────────────────
+    # If the user explicitly describes a crop (e.g., "watermelon leaf") but
+    # the model predicts a DIFFERENT crop (e.g., "cotton"), the model is
+    # likely wrong. Force fallback to LLaVA which can actually see the image.
+    user_text = state.get("user_text", "").lower()
+    force_fallback = False
+    if user_text and confidence > GEMINI_FALLBACK_THRESHOLD:
+        # Known crop names the user might type
+        known_crops = [
+            "mango", "watermelon", "banana", "coconut", "papaya", "guava",
+            "pomegranate", "orange", "lemon", "chilli", "onion", "brinjal",
+            "okra", "cauliflower", "cabbage", "pea", "mustard", "sunflower",
+            "jute", "tea", "coffee", "cardamom", "turmeric", "ginger",
+            "rice", "wheat", "maize", "cotton", "tomato", "potato",
+            "apple", "grape", "corn", "soybean", "sugarcane", "pepper",
+            "cherry", "peach", "strawberry", "blueberry", "raspberry",
+            "squash", "cucumber", "pumpkin", "melon", "citrus",
+        ]
+        predicted_crop = label.split("___")[0].lower().replace(" ", "_") if "___" in label else label.lower().split("_")[0]
+        user_mentioned_crop = None
+        for crop in known_crops:
+            if crop in user_text:
+                user_mentioned_crop = crop
+                break
+        
+        if user_mentioned_crop and user_mentioned_crop not in predicted_crop and predicted_crop not in user_mentioned_crop:
+            logger.warning(
+                f"CONTRADICTION: User said '{user_mentioned_crop}' but model predicted '{predicted_crop}' "
+                f"({confidence:.0%}) → forcing LLaVA vision fallback"
+            )
+            force_fallback = True
+            confidence = 0.20  # Force below threshold
+
     # ── Tier 2: AI Vision Fallback (LLaVA → Gemini → Ollama Text) ──────
     #
     # When EfficientNet is uncertain (mango, random crops, etc.), we need
@@ -345,7 +378,7 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     #   3. Ollama text (can't see images, uses user description + top3 guesses)
     #
     vision_fallback_result = None
-    if confidence < GEMINI_FALLBACK_THRESHOLD:
+    if confidence < GEMINI_FALLBACK_THRESHOLD or force_fallback:
         logger.info(f"Tier 1 confidence {confidence:.2f} < {GEMINI_FALLBACK_THRESHOLD} → AI Vision fallback")
 
         # ── Step 1: Try Ollama LLaVA Vision (LOCAL, can SEE images) ────
