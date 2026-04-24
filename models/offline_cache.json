@@ -256,17 +256,17 @@
     }
   },
   "market:cotton:14.5:75.9": {
-    "timestamp": 1776991404.4053707,
+    "timestamp": 1777042305.7992704,
     "value": {
       "crop": "cotton",
-      "modal_price": 6682,
+      "modal_price": 7066,
       "msp": 7121,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "down",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-24T06:13:24.388102"
+      "timestamp": "2026-04-24T20:21:45.799270"
     }
   },
   "market:maize:14.5:75.9": {

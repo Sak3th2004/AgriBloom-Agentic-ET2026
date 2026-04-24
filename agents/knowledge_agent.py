@@ -436,8 +436,11 @@ def _build_recommendations(
     if rain > 10 or forecast_rain > 20:
         recommendations.append(WEATHER_RECOMMENDATIONS["rain_expected"].get(lang, WEATHER_RECOMMENDATIONS["rain_expected"]["en"]))
 
-    # Disease-specific actions - always add consult expert in user's language
-    recommendations.append(WEATHER_RECOMMENDATIONS["consult_expert"].get(lang, WEATHER_RECOMMENDATIONS["consult_expert"]["en"]))
+    # Disease-specific actions from agronomy database
+    if agronomy.get("actions"):
+        for action in agronomy["actions"][:3]:
+            if "consult" not in action.lower():
+                recommendations.append(action)
 
     # Market recommendation
     price_trend = market.get("price_trend", "stable")

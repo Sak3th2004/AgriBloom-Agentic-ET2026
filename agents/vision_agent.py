@@ -538,8 +538,9 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     if vision_fallback_result and vision_fallback_result.get("treatment"):
         treatment = vision_fallback_result["treatment"]
 
-    # ── GenAI treatment enhancement (if available and online) ────────────
-    if confidence >= CONFIDENCE_THRESHOLD and not offline and "healthy" not in label.lower():
+    # ── GenAI treatment enhancement — ALWAYS call NVIDIA for detailed advice ──
+    # Note: We always try NVIDIA even in "offline" mode — treatment quality is critical
+    if label not in ["uncertain_detection", "unknown", "error"] and "healthy" not in label.lower():
         try:
             import concurrent.futures
             from utils.genai_handler import generate_treatment_advice, is_genai_available
@@ -550,11 +551,12 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     )
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_gen)
-                    genai_advice = future.result(timeout=10)  # 10s max
-                if genai_advice:
+                    genai_advice = future.result(timeout=25)  # 25s for detailed response
+                if genai_advice and len(genai_advice) > 50:
                     treatment = genai_advice
+                    logger.info(f"NVIDIA treatment advice: {len(genai_advice)} chars")
         except concurrent.futures.TimeoutError:
-            logger.warning("GenAI treatment timed out after 10s — using local treatment")
+            logger.warning("GenAI treatment timed out after 25s — using local treatment")
         except Exception as e:
             logger.warning(f"GenAI treatment enhancement skipped: {e}")
 
