@@ -302,6 +302,45 @@ def _get_farmer_instructions(lang_code: str) -> str:
 4. 🎯 **நோய் புள்ளிகள்** தெளிவாக தெரிய வேண்டும்
 
 **🔄 படிகள்:** மொழி → புகைப்படம் → மாநிலம் → ஆலோசனை → கேளுங்கள் 🔊""",
+        "pa": """**📸 ਚੰਗੀ ਫੋਟੋ ਕਿਵੇਂ ਲੈਣੀ ਹੈ:**
+1. 🌿 ਆਪਣੀ ਫ਼ਸਲ ਤੋਂ **ਸਭ ਤੋਂ ਪ੍ਰਭਾਵਿਤ ਪੱਤਾ** ਚੁਣੋ
+2. ☀️ **ਦਿਨ ਦੀ ਰੌਸ਼ਨੀ** ਵਿੱਚ ਫੋਟੋ ਲਓ
+3. 📏 ਫ਼ੋਨ ਨੂੰ **ਪੱਤੇ ਦੇ ਨੇੜੇ** ਰੱਖੋ
+4. 🎯 **ਬਿਮਾਰੀ ਦੇ ਨਿਸ਼ਾਨ** ਸਾਫ਼ ਦਿਖਾਈ ਦੇਣ
+
+**🔄 ਤਰੀਕਾ:** ਭਾਸ਼ਾ ਚੁਣੋ → ਫੋਟੋ → ਰਾਜ → ਸਲਾਹ ਲਓ → ਸੁਣੋ 🔊""",
+
+        "gu": """**📸 સારો ફોટો કેવી રીતે લેવો:**
+1. 🌿 તમારા પાકમાંથી **સૌથી વધુ અસરગ્રસ્ત પાન** પસંદ કરો
+2. ☀️ **દિવસના અજવાળામાં** ફોટો લો
+3. 📏 ફોનને **પાનની નજીક** રાખો
+4. 🎯 **રોગના ડાઘ** સ્પષ્ટ દેખાવા જોઈએ
+
+**🔄 રીત:** ભાષા → ફોટો → રાજ્ય → સલાહ મેળવો → સાંભળો 🔊""",
+
+        "mr": """**📸 चांगला फोटो कसा काढायचा:**
+1. 🌿 तुमच्या पिकातून **सर्वात जास्त प्रभावित पान** निवडा
+2. ☀️ **दिवसाच्या उजेडात** फोटो काढा
+3. 📏 फोन **पानाजवळ** धरा
+4. 🎯 **रोगाचे डाग** स्पष्ट दिसले पाहिजेत
+
+**🔄 पद्धत:** भाषा → फोटो → राज्य → सल्ला घ्या → ऐका 🔊""",
+
+        "bn": """**📸 ভালো ছবি কীভাবে তুলবেন:**
+1. 🌿 আপনার ফসল থেকে **সবচেয়ে আক্রান্ত পাতা** বেছে নিন
+2. ☀️ **দিনের আলোতে** ছবি তুলুন
+3. 📏 ফোন **পাতার কাছে** ধরুন
+4. 🎯 **রোগের দাগ** স্পষ্ট দেখা যেতে হবে
+
+**🔄 ধাপ:** ভাষা → ছবি → রাজ্য → পরামর্শ নিন → শুনুন 🔊""",
+
+        "or": """**📸 ଭଲ ଫଟୋ କିପରି ନେବେ:**
+1. 🌿 ଆପଣଙ୍କ ଫସଲରୁ **ସବୁଠୁ ଅଧିକ ପ୍ରଭାବିତ ପତ୍ର** ବାଛନ୍ତୁ
+2. ☀️ **ଦିନର ଆଲୋକରେ** ଫଟୋ ନିଅନ୍ତୁ
+3. 📏 ଫୋନ **ପତ୍ର ପାଖରେ** ଧରନ୍ତୁ
+4. 🎯 **ରୋଗର ଚିହ୍ନ** ସ୍ପଷ୍ଟ ଦେଖାଯିବା ଉଚିତ
+
+**🔄 ପ୍ରଣାଳୀ:** ଭାଷା → ଫଟୋ → ରାଜ୍ୟ → ପରାମର୍ଶ → ଶୁଣନ୍ତୁ 🔊""",
     }
     return instructions.get(lang_code, instructions["en"])
 
@@ -484,24 +523,6 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         # ── Extra Feature Tabs ───────────────────────────────────────────
         with gr.Row():
             with gr.Column(scale=1):
-                with gr.Accordion("🧪 Fertilizer Calculator", open=False):
-                    gr.Markdown("*Calculate exact fertilizer for your crop and area*")
-                    fert_crop = gr.Dropdown(
-                        choices=["Rice", "Wheat", "Cotton", "Maize", "Sugarcane", "Tomato",
-                                 "Potato", "Ragi", "Groundnut", "Soybean", "Pepper", "Apple", "Grape"],
-                        value="Rice", label="Crop",
-                    )
-                    fert_area = gr.Number(value=1.0, label="Area (acres)", minimum=0.1, maximum=100)
-                    fert_soil = gr.Radio(
-                        choices=["low_fertility", "medium", "high_fertility"],
-                        value="medium", label="Soil Type",
-                    )
-                    fert_btn = gr.Button("🧪 Calculate", size="sm")
-                    fert_output = gr.Markdown("")
-
-            with gr.Column(scale=1):
-                with gr.Accordion("📅 Current Season Advisory", open=False):
-                    seasonal_info = gr.Markdown(_get_seasonal_info("en"))
 
                 with gr.Accordion("📞 Helplines & Nearest KVK", open=False):
                     helpline_output = gr.Markdown(
@@ -528,20 +549,40 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             districts = INDIAN_LOCATIONS.get(state, ["Select"])
             return gr.Dropdown(choices=districts, value=districts[0])
 
+        # Quick problem button labels per language
+        PROBLEM_LABELS = {
+            "en": ["🍂 Leaf Spots", "🟡 Yellow Leaves", "🐛 Insects/Pests", "🍄 White Fungus", "🥀 Wilting/Drying", "🌿 Healthy Check"],
+            "hi": ["🍂 पत्ती के दाग", "🟡 पीली पत्तियां", "🐛 कीड़े/कीट", "🍄 सफेद फफूंद", "🥀 मुरझाना/सूखना", "🌿 स्वस्थ जांच"],
+            "kn": ["🍂 ಎಲೆ ಮಚ್ಚೆ", "🟡 ಹಳದಿ ಎಲೆ", "🐛 ಕೀಟ/ಹುಳು", "🍄 ಬಿಳಿ ಶಿಲೀಂಧ್ರ", "🥀 ಬಾಡುವಿಕೆ", "🌿 ಆರೋಗ್ಯ ಪರೀಕ್ಷೆ"],
+            "te": ["🍂 ఆకు మచ్చలు", "🟡 పసుపు ఆకులు", "🐛 పురుగులు", "🍄 తెల్ల బూజు", "🥀 వాడిపోవడం", "🌿 ఆరోగ్య తనిఖీ"],
+            "ta": ["🍂 இலை புள்ளி", "🟡 மஞ்சள் இலை", "🐛 பூச்சி/கிருமி", "🍄 வெள்ளை பூஞ்சை", "🥀 வாடல்", "🌿 ஆரோக்கிய சோதனை"],
+            "pa": ["🍂 ਪੱਤੇ ਦੇ ਧੱਬੇ", "🟡 ਪੀਲੇ ਪੱਤੇ", "🐛 ਕੀੜੇ", "🍄 ਚਿੱਟੀ ਫ਼ਫ਼ੂੰਦ", "🥀 ਮੁਰਝਾਉਣਾ", "🌿 ਸਿਹਤ ਜਾਂਚ"],
+            "gu": ["🍂 પાનના ડાઘ", "🟡 પીળા પાન", "🐛 જીવાત", "🍄 સફેદ ફૂગ", "🥀 કરમાવું", "🌿 આરોગ્ય તપાસ"],
+            "mr": ["🍂 पानावरील डाग", "🟡 पिवळी पाने", "🐛 कीड", "🍄 पांढरी बुरशी", "🥀 मरगळ", "🌿 आरोग्य तपासणी"],
+            "bn": ["🍂 পাতার দাগ", "🟡 হলুদ পাতা", "🐛 পোকা", "🍄 সাদা ছত্রাক", "🥀 ঝিমানো", "🌿 স্বাস্থ্য পরীক্ষা"],
+            "or": ["🍂 ପତ୍ର ଦାଗ", "🟡 ହଳଦିଆ ପତ୍ର", "🐛 କୀଟ", "🍄 ଧଳା ଫିମ୍ପି", "🥀 ଶୁଖିବା", "🌿 ସ୍ୱାସ୍ଥ୍ୟ ଯାଞ୍ଚ"],
+        }
+
         def update_ui_labels(language_name):
-            """Update UI labels when language changes."""
+            """Update ALL UI labels when language changes."""
             lang_code = LANGUAGE_MAP.get(language_name, "en")
             labels = _get_labels(lang_code)
-            seasonal = _get_seasonal_info(lang_code)
             instructions = _get_farmer_instructions(lang_code)
+            prob_labels = PROBLEM_LABELS.get(lang_code, PROBLEM_LABELS["en"])
             return (
                 gr.update(label=labels["upload"]),
                 gr.update(label=labels["describe"], placeholder=labels["placeholder"]),
                 gr.update(label=labels["result"]),
                 gr.update(label=labels["listen"]),
                 gr.update(value=labels["status_ready"]),
-                seasonal,
                 instructions,
+                gr.update(value=labels["submit"]),
+                gr.update(value=prob_labels[0]),
+                gr.update(value=prob_labels[1]),
+                gr.update(value=prob_labels[2]),
+                gr.update(value=prob_labels[3]),
+                gr.update(value=prob_labels[4]),
+                gr.update(value=prob_labels[5]),
             )
 
         def process_query(image, text_value, language_name, state, district, offline, history):
@@ -643,7 +684,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         language.change(
             fn=update_ui_labels,
             inputs=[language],
-            outputs=[image_input, text_input, response_output, voice_output, status_output, seasonal_info, farmer_instructions],
+            outputs=[image_input, text_input, response_output, voice_output, status_output, farmer_instructions, submit_btn, prob_btn1, prob_btn2, prob_btn3, prob_btn4, prob_btn5, prob_btn6],
         )
 
         # ── Geolocation Detection ─────────────────────────────────────────
@@ -829,19 +870,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         prob_btn5.click(fn=lambda: "My crop plants are wilting and drying up", inputs=None, outputs=[text_input])
         prob_btn6.click(fn=lambda: "Check if my crop is healthy", inputs=None, outputs=[text_input])
 
-        # Fertilizer calculator
-        def calc_fertilizer(crop_name, area, soil):
-            try:
-                from utils.fertilizer_calc import format_fertilizer_card
-                return format_fertilizer_card(crop_name.lower(), float(area), soil)
-            except Exception as e:
-                return f"Error: {str(e)}"
 
-        fert_btn.click(
-            fn=calc_fertilizer,
-            inputs=[fert_crop, fert_area, fert_soil],
-            outputs=[fert_output],
-        )
 
         # Update helpline when state changes
         def update_helpline(state_name, language_name):
