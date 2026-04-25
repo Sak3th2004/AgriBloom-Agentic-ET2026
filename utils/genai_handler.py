@@ -96,7 +96,7 @@ def _nvidia_generate(prompt: str, image=None, model: str = None, task: str = "ge
                     "Authorization": f"Bearer {key}",
                 },
             )
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=8) as resp:
                 data = _json.loads(resp.read().decode())
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:

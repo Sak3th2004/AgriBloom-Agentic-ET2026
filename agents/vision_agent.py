@@ -555,7 +555,7 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     )
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_gen)
-                    genai_advice = future.result(timeout=30)  # 30s max for treatment
+                    genai_advice = future.result(timeout=20)  # 20s max for treatment
                 if genai_advice and len(genai_advice) > 50:
                     treatment = genai_advice
                     logger.info(f"NVIDIA treatment advice: {len(genai_advice)} chars")

@@ -295,7 +295,7 @@ def _format_response(state: dict[str, Any], lang: str = "en") -> str:
 
 
 def _generate_voice(text: str, lang: str, output_dir: Path) -> Path:
-    """Generate voice output using gTTS."""
+    """Generate voice output using gTTS. Truncated for speed."""
     tts_lang = LANGUAGE_MAP.get(lang, "en")
     audio_path = output_dir / f"response_{lang}_{datetime.now().strftime('%H%M%S')}.mp3"
 
@@ -305,6 +305,10 @@ def _generate_voice(text: str, lang: str, output_dir: Path) -> Path:
         clean_text = clean_text.replace("⚠️", "").replace("🌤️", "").replace("💰", "")
         clean_text = clean_text.replace("📋", "").replace("📢", "").replace("💊", "")
         clean_text = clean_text.replace("❌", "").replace("=", "")
+
+        # Truncate to ~500 chars for speed (full report in text + PDF)
+        if len(clean_text) > 500:
+            clean_text = clean_text[:500] + "..."
 
         tts = gTTS(text=clean_text, lang=tts_lang, slow=False)
         tts.save(str(audio_path))
