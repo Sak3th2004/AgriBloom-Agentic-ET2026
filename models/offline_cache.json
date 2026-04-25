@@ -40,7 +40,7 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1777094707.0170324,
+    "timestamp": 1777095141.0204308,
     "value": {
       "temp_c": 35.0,
       "feels_like": 34.7,
@@ -50,7 +50,7 @@
       "weather_desc": "Scattered Clouds",
       "forecast_3day_rain": 0,
       "source": "openweathermap",
-      "timestamp": "2026-04-25T10:55:07.005085"
+      "timestamp": "2026-04-25T11:02:21.008333"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -426,17 +426,17 @@
     }
   },
   "market:orange:14.5:75.9": {
-    "timestamp": 1777092289.1802728,
+    "timestamp": 1777095141.0385635,
     "value": {
       "crop": "orange",
-      "modal_price": 3631,
+      "modal_price": 3955,
       "msp": 4000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "down",
+      "price_trend": "stable",
       "source": "market_model",
-      "timestamp": "2026-04-25T10:14:49.165983"
+      "timestamp": "2026-04-25T11:02:21.025459"
     }
   },
   "market:**_cotton_(gossypium_hirsutum):14.5:75.9": {
