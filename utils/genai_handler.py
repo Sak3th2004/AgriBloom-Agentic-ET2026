@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # NVIDIA API (PRIMARY — free, powerful, reliable)
-# Multiple keys for rotation to avoid rate limits during demo
+# Smart key segregation: Key1=Vision, Key2=Treatment, Key3=General/Followup
+# Each task gets a dedicated key → 3000 total calls/day, no interference
 # ═════════════════════════════════════════════════════════════════════════════
 _NVIDIA_API_KEYS = [
     k.strip() for k in [
@@ -38,16 +39,30 @@ _NVIDIA_KEY_IDX = 0
 _NVIDIA_API_KEY = _NVIDIA_API_KEYS[0] if _NVIDIA_API_KEYS else ""
 _NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
+# Task-to-key mapping (segregates load across keys)
+_NVIDIA_TASK_KEY = {
+    "vision": 0,       # Key 1: Vision identification (90B model)
+    "treatment": 1,    # Key 2: Treatment advice (70B model)
+    "general": 2,      # Key 3: Follow-up, chat, other
+}
 
-def _nvidia_generate(prompt: str, image=None, model: str = None) -> str:
-    """Call NVIDIA's free API with key rotation. Supports text AND vision."""
+logger.info(f"NVIDIA API: {len(_NVIDIA_API_KEYS)} keys loaded for smart rotation")
+
+
+def _nvidia_generate(prompt: str, image=None, model: str = None, task: str = "general") -> str:
+    """Call NVIDIA's free API with smart key segregation. Supports text AND vision."""
     global _NVIDIA_KEY_IDX
     if not _NVIDIA_API_KEYS:
         return ""
     
-    # Try each key once
-    for attempt in range(len(_NVIDIA_API_KEYS)):
-        key = _NVIDIA_API_KEYS[_NVIDIA_KEY_IDX]
+    # Start with the dedicated key for this task type
+    n_keys = len(_NVIDIA_API_KEYS)
+    start_idx = _NVIDIA_TASK_KEY.get(task, 2) % n_keys
+    
+    # Try each key once, starting from the task-dedicated key
+    for attempt in range(n_keys):
+        key_idx = (start_idx + attempt) % n_keys
+        key = _NVIDIA_API_KEYS[key_idx]
         try:
             import urllib.request
             import json as _json
@@ -85,16 +100,15 @@ def _nvidia_generate(prompt: str, image=None, model: str = None) -> str:
                 data = _json.loads(resp.read().decode())
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:
-                    logger.info(f"NVIDIA API response ({len(text)} chars, model={model.split('/')[-1]}, key={_NVIDIA_KEY_IDX})")
+                    logger.info(f"NVIDIA API response ({len(text)} chars, model={model.split('/')[-1]}, key={key_idx}, task={task})")
                 return text
         except Exception as e:
-            logger.warning(f"NVIDIA key {_NVIDIA_KEY_IDX} failed: {e}")
-            _NVIDIA_KEY_IDX = (_NVIDIA_KEY_IDX + 1) % len(_NVIDIA_API_KEYS)
-            if attempt < len(_NVIDIA_API_KEYS) - 1:
-                logger.info(f"Rotating to NVIDIA key {_NVIDIA_KEY_IDX}")
+            logger.warning(f"NVIDIA key {key_idx} failed ({task}): {e}")
+            if attempt < n_keys - 1:
+                logger.info(f"Rotating to NVIDIA key {(start_idx + attempt + 1) % n_keys}")
                 continue
     
-    logger.warning("All NVIDIA API keys failed")
+    logger.warning(f"All NVIDIA API keys failed for task={task}")
     return ""
 
 
@@ -190,14 +204,14 @@ def _ollama_generate(prompt: str) -> str:
 
 _GEMINI_COOLDOWN_UNTIL = 0
 
-def _generate(prompt: str, image=None) -> str:
+def _generate(prompt: str, image=None, task: str = "general") -> str:
     """Unified LLM call: NVIDIA → Gemini → Ollama. Auto-rotates on failure."""
     global _CURRENT_KEY_IDX, _GEMINI_COOLDOWN_UNTIL
     import time
 
     # ── 1. Try NVIDIA API first (powerful, free, supports vision) ──────
-    if _NVIDIA_API_KEY:
-        result = _nvidia_generate(prompt, image)
+    if _NVIDIA_API_KEYS:
+        result = _nvidia_generate(prompt, image, task=task)
         if result:
             return result
 
@@ -332,7 +346,7 @@ def generate_treatment_advice(
     CRITICAL: Write your ENTIRE response in {lang_name}. NOT in English. Every word in {lang_name}."""
 
     try:
-        result = _generate(prompt)
+        result = _generate(prompt, task="treatment")
         if result:
             logger.info(f"Treatment advice generated ({len(result)} chars)")
         return result
@@ -432,8 +446,8 @@ def _ollama_vision_analyze(image, prompt: str) -> str:
     and diagnose any crop disease, even crops EfficientNet was never trained on.
     """
     # ── Try NVIDIA Vision first (90B model, extremely accurate) ────────
-    if _NVIDIA_API_KEY:
-        result = _nvidia_generate(prompt, image, model="meta/llama-3.2-90b-vision-instruct")
+    if _NVIDIA_API_KEYS:
+        result = _nvidia_generate(prompt, image, model="meta/llama-3.2-90b-vision-instruct", task="vision")
         if result:
             logger.info(f"NVIDIA Vision diagnosed ({len(result)} chars)")
             return result
