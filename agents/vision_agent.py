@@ -370,17 +370,9 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
             force_fallback = True
             confidence = 0.20  # Force below threshold
 
-        # If user describes a SYMPTOM (from quick buttons) but doesn't mention
-        # a specific crop name, ALWAYS use NVIDIA vision — EfficientNet may
-        # misidentify crops it wasn't trained on (orange→cotton, papaya→maize)
-        symptom_keywords = ["spots", "yellow", "wilting", "drying", "insects", "pests", "fungus", "powder", "healthy"]
-        has_symptom = any(kw in user_text for kw in symptom_keywords)
-        if has_symptom and not user_mentioned_crop:
-            logger.info(
-                f"SYMPTOM without crop name: '{user_text[:60]}' — forcing NVIDIA vision for accurate crop ID"
-            )
-            force_fallback = True
-            confidence = 0.20
+        # Note: We intentionally DON'T force fallback for generic symptom text
+        # (quick buttons). EfficientNet + NVIDIA treatment is faster and more reliable
+        # than forcing NVIDIA vision, which can also misidentify crops.
 
     # ── Tier 2: AI Vision Fallback (LLaVA → Gemini → Ollama Text) ──────
     #
@@ -563,7 +555,7 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
                     )
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_gen)
-                    genai_advice = future.result(timeout=60)  # 60s for full fallback chain
+                    genai_advice = future.result(timeout=30)  # 30s max for treatment
                 if genai_advice and len(genai_advice) > 50:
                     treatment = genai_advice
                     logger.info(f"NVIDIA treatment advice: {len(genai_advice)} chars")

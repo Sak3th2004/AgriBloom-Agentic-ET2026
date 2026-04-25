@@ -96,7 +96,7 @@ def _nvidia_generate(prompt: str, image=None, model: str = None, task: str = "ge
                     "Authorization": f"Bearer {key}",
                 },
             )
-            with urllib.request.urlopen(req, timeout=45) as resp:
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 data = _json.loads(resp.read().decode())
                 text = data["choices"][0]["message"]["content"].strip()
                 if text:
@@ -191,7 +191,7 @@ def _ollama_generate(prompt: str) -> str:
             data=payload,
             headers={"Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = _json.loads(resp.read().decode())
             text = data.get("response", "").strip()
             if text:
@@ -474,7 +474,7 @@ def _ollama_vision_analyze(image, prompt: str) -> str:
             data=payload,
             headers={"Content-Type": "application/json"},
         )
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = _json.loads(resp.read().decode())
             text = data.get("response", "").strip()
             if text:

@@ -596,10 +596,10 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                         lon=float(lon),
                     )
 
-                # 300s timeout — pipeline needs time for AI treatment + voice generation
+                # 180s timeout — safety net (actual pipeline should finish in 30-90s)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_run)
-                    result = future.result(timeout=300)
+                    result = future.result(timeout=180)
 
                 conf = result.get("disease_prediction", {}).get("confidence", 0)
                 source = result.get("disease_prediction", {}).get("source", "")
