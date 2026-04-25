@@ -25,62 +25,77 @@ logger = logging.getLogger(__name__)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # NVIDIA API (PRIMARY — free, powerful, reliable)
+# Multiple keys for rotation to avoid rate limits during demo
 # ═════════════════════════════════════════════════════════════════════════════
-_NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "").strip()
+_NVIDIA_API_KEYS = [
+    k.strip() for k in [
+        os.getenv("NVIDIA_API_KEY", ""),
+        os.getenv("NVIDIA_API_KEY_2", ""),
+        os.getenv("NVIDIA_API_KEY_3", ""),
+    ] if k.strip()
+]
+_NVIDIA_KEY_IDX = 0
+_NVIDIA_API_KEY = _NVIDIA_API_KEYS[0] if _NVIDIA_API_KEYS else ""
 _NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
 
 def _nvidia_generate(prompt: str, image=None, model: str = None) -> str:
-    """Call NVIDIA's free API. Supports text AND vision models."""
-    if not _NVIDIA_API_KEY:
+    """Call NVIDIA's free API with key rotation. Supports text AND vision."""
+    global _NVIDIA_KEY_IDX
+    if not _NVIDIA_API_KEYS:
         return ""
     
-    try:
-        import urllib.request
-        import json as _json
+    # Try each key once
+    for attempt in range(len(_NVIDIA_API_KEYS)):
+        key = _NVIDIA_API_KEYS[_NVIDIA_KEY_IDX]
+        try:
+            import urllib.request
+            import json as _json
 
-        # Use vision model if image provided, otherwise text model
-        if model is None:
-            model = "meta/llama-3.2-90b-vision-instruct" if image is not None else "meta/llama-3.3-70b-instruct"
-        
-        # Build message content
-        if image is not None:
-            # Convert PIL image to base64
-            buf = io.BytesIO()
-            image.save(buf, format="PNG")
-            img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+            if model is None:
+                model = "meta/llama-3.2-90b-vision-instruct" if image is not None else "meta/llama-3.3-70b-instruct"
             
-            content = [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
-            ]
-        else:
-            content = prompt
+            if image is not None:
+                buf = io.BytesIO()
+                image.save(buf, format="PNG")
+                img_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                content = [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
+                ]
+            else:
+                content = prompt
 
-        payload = _json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": content}],
-            "max_tokens": 1024,
-            "temperature": 0.4,
-        }).encode("utf-8")
+            payload = _json.dumps({
+                "model": model,
+                "messages": [{"role": "user", "content": content}],
+                "max_tokens": 2048,
+                "temperature": 0.4,
+            }).encode("utf-8")
 
-        req = urllib.request.Request(
-            _NVIDIA_BASE_URL,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {_NVIDIA_API_KEY}",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=45) as resp:
-            data = _json.loads(resp.read().decode())
-            text = data["choices"][0]["message"]["content"].strip()
-            if text:
-                logger.info(f"NVIDIA API response ({len(text)} chars, model={model.split('/')[-1]})")
-            return text
-    except Exception as e:
-        logger.warning(f"NVIDIA API failed: {e}")
-        return ""
+            req = urllib.request.Request(
+                _NVIDIA_BASE_URL,
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {key}",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                data = _json.loads(resp.read().decode())
+                text = data["choices"][0]["message"]["content"].strip()
+                if text:
+                    logger.info(f"NVIDIA API response ({len(text)} chars, model={model.split('/')[-1]}, key={_NVIDIA_KEY_IDX})")
+                return text
+        except Exception as e:
+            logger.warning(f"NVIDIA key {_NVIDIA_KEY_IDX} failed: {e}")
+            _NVIDIA_KEY_IDX = (_NVIDIA_KEY_IDX + 1) % len(_NVIDIA_API_KEYS)
+            if attempt < len(_NVIDIA_API_KEYS) - 1:
+                logger.info(f"Rotating to NVIDIA key {_NVIDIA_KEY_IDX}")
+                continue
+    
+    logger.warning("All NVIDIA API keys failed")
+    return ""
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -240,7 +255,7 @@ def _generate(prompt: str, image=None) -> str:
 
 def is_genai_available() -> bool:
     """Check if any LLM backend is available (NVIDIA, Gemini, or Ollama)."""
-    if _NVIDIA_API_KEY:
+    if _NVIDIA_API_KEYS:
         return True
     model = _get_gemini_model()
     if model is not None:

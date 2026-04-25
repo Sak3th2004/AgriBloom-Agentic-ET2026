@@ -40,17 +40,17 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1777092522.6666455,
+    "timestamp": 1777092970.3288884,
     "value": {
       "temp_c": 35.0,
-      "feels_like": 34.6,
+      "feels_like": 34.7,
       "rain_mm": 0.0,
       "humidity": 30,
       "wind_speed": 1.3,
       "weather_desc": "Scattered Clouds",
       "forecast_3day_rain": 0,
       "source": "openweathermap",
-      "timestamp": "2026-04-25T10:18:42.651392"
+      "timestamp": "2026-04-25T10:26:10.315459"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -68,17 +68,17 @@
     }
   },
   "market:unknown:14.5:75.9": {
-    "timestamp": 1776944314.5449739,
+    "timestamp": 1777092970.343937,
     "value": {
       "crop": "unknown",
-      "modal_price": 1953,
+      "modal_price": 2209,
       "msp": 2000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "stable",
+      "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-04-23T17:08:34.533603"
+      "timestamp": "2026-04-25T10:26:10.331731"
     }
   },
   "weather:16.31:80.44": {
