@@ -808,6 +808,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
             if not audio_path:
                 return gr.update()  # Don't overwrite existing text
 
+            import os
             groq_key = os.getenv("GROQ_API_KEY", "").strip()
             if not groq_key:
                 return "⚠️ GROQ_API_KEY not set in .env — get free key at console.groq.com"
@@ -874,13 +875,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 logger.error(f"Groq transcription failed: {e}")
                 return f"⚠️ Transcription failed: {str(e)[:60]}"
 
-        # Auto-transcribe when farmer stops recording
-        mic_input.stop_recording(
-            fn=transcribe_audio,
-            inputs=[mic_input, language],
-            outputs=[text_input],
-        )
-        # Also transcribe if audio is uploaded
+        # Auto-transcribe when mic recording is done
         mic_input.change(
             fn=transcribe_audio,
             inputs=[mic_input, language],
