@@ -40,15 +40,17 @@
     }
   },
   "weather:14.46:75.92": {
-    "timestamp": 1776991404.3851078,
+    "timestamp": 1777090697.407473,
     "value": {
-      "temp_c": 25.0,
+      "temp_c": 32.7,
+      "feels_like": 33.3,
       "rain_mm": 0.0,
-      "humidity": 95,
-      "wind_speed": 3.7,
-      "forecast_3day_rain": 0.9999999999999999,
-      "source": "open-meteo",
-      "timestamp": "2026-04-24T06:13:24.384101"
+      "humidity": 40,
+      "wind_speed": 1.7,
+      "weather_desc": "Scattered Clouds",
+      "forecast_3day_rain": 0,
+      "source": "openweathermap",
+      "timestamp": "2026-04-25T09:48:17.383909"
     }
   },
   "market:ragi:14.5:75.9": {
@@ -256,17 +258,17 @@
     }
   },
   "market:cotton:14.5:75.9": {
-    "timestamp": 1777042305.7992704,
+    "timestamp": 1777086707.5969992,
     "value": {
       "crop": "cotton",
-      "modal_price": 7066,
+      "modal_price": 6636,
       "msp": 7121,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "stable",
+      "price_trend": "down",
       "source": "market_model",
-      "timestamp": "2026-04-24T20:21:45.799270"
+      "timestamp": "2026-04-25T08:41:47.582422"
     }
   },
   "market:maize:14.5:75.9": {
@@ -368,17 +370,17 @@
     }
   },
   "market:mango:14.5:75.9": {
-    "timestamp": 1777040492.299819,
+    "timestamp": 1777086789.7468534,
     "value": {
       "crop": "mango",
-      "modal_price": 2003,
+      "modal_price": 2231,
       "msp": 2000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
-      "price_trend": "stable",
+      "price_trend": "up",
       "source": "market_model",
-      "timestamp": "2026-04-24T19:51:32.298290"
+      "timestamp": "2026-04-25T08:43:09.734431"
     }
   },
   "market:llava:14.5:75.9": {
@@ -410,17 +412,31 @@
     }
   },
   "market:**_mango:14.5:75.9": {
-    "timestamp": 1777037313.0952694,
+    "timestamp": 1777043111.3550472,
     "value": {
       "crop": "**_mango",
-      "modal_price": 1884,
+      "modal_price": 1968,
       "msp": 2000,
+      "mandi": "Davangere",
+      "state": "Karnataka",
+      "distance_km": 0.5,
+      "price_trend": "stable",
+      "source": "market_model",
+      "timestamp": "2026-04-24T20:35:11.341365"
+    }
+  },
+  "market:orange:14.5:75.9": {
+    "timestamp": 1777090697.4238758,
+    "value": {
+      "crop": "orange",
+      "modal_price": 3617,
+      "msp": 4000,
       "mandi": "Davangere",
       "state": "Karnataka",
       "distance_km": 0.5,
       "price_trend": "down",
       "source": "market_model",
-      "timestamp": "2026-04-24T18:58:33.095269"
+      "timestamp": "2026-04-25T09:48:17.410985"
     }
   }
 }

@@ -189,10 +189,8 @@ def _generate(prompt: str, image=None) -> str:
     # ── 2. Try Gemini (supports images) ────────────────────────────────
     _get_gemini_model()
     if _GEMINI_AVAILABLE is True and time.time() > _GEMINI_COOLDOWN_UNTIL:
-        max_attempts = len(API_KEYS) + 1
-        rate_limit_count = 0
-        
-        for attempt in range(max_attempts):
+        # Try each Gemini key once only (fast fail)
+        for attempt in range(len(API_KEYS)):
             try:
                 if _GEMINI_SDK == "new":
                     from google import genai as genai_new
@@ -218,20 +216,17 @@ def _generate(prompt: str, image=None) -> str:
             except Exception as e:
                 error_str = str(e)
                 if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                    rate_limit_count += 1
                     logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
                     _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
                     _get_gemini_model(force_reinit=True)
-                    if rate_limit_count >= len(API_KEYS):
-                        _GEMINI_COOLDOWN_UNTIL = time.time() + 60
-                        logger.warning("All Gemini keys exhausted — cooldown 60s")
-                        break
-                    time.sleep(0.5)
                     continue
                 logger.warning(f"Gemini generation failed: {e}")
                 break
+        # If we get here, all keys failed
+        _GEMINI_COOLDOWN_UNTIL = time.time() + 60
+        logger.warning("All Gemini keys exhausted — cooldown 60s")
     elif _GEMINI_AVAILABLE is True:
-        logger.info("Gemini in cooldown — skipping")
+        logger.info("Gemini in cooldown — skipping to Ollama")
 
     # ── 3. Fallback to local Ollama (text only, no images) ─────────────
     if image is None:
