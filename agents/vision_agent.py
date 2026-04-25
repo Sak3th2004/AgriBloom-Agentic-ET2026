@@ -370,6 +370,18 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
             force_fallback = True
             confidence = 0.20  # Force below threshold
 
+        # If user describes a SYMPTOM (from quick buttons) but doesn't mention
+        # a specific crop name, ALWAYS use NVIDIA vision — EfficientNet may
+        # misidentify crops it wasn't trained on (orange→cotton, papaya→maize)
+        symptom_keywords = ["spots", "yellow", "wilting", "drying", "insects", "pests", "fungus", "powder", "healthy"]
+        has_symptom = any(kw in user_text for kw in symptom_keywords)
+        if has_symptom and not user_mentioned_crop:
+            logger.info(
+                f"SYMPTOM without crop name: '{user_text[:60]}' — forcing NVIDIA vision for accurate crop ID"
+            )
+            force_fallback = True
+            confidence = 0.20
+
     # ── Tier 2: AI Vision Fallback (LLaVA → Gemini → Ollama Text) ──────
     #
     # When EfficientNet is uncertain (mango, random crops, etc.), we need
