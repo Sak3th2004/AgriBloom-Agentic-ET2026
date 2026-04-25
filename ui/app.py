@@ -432,6 +432,15 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     placeholder="Example: My tomato leaves have brown spots...",
                 )
 
+                # ── Voice Input (Groq Whisper — speaks in any language) ──
+                with gr.Accordion("🎤 Speak Your Problem / बोलकर बताएं / ಮಾತನಾಡಿ", open=False):
+                    mic_input = gr.Audio(
+                        sources=["microphone"],
+                        type="filepath",
+                        label="🎤 Record your voice (speak in any language)",
+                    )
+                    transcribe_btn = gr.Button("📝 Convert Speech to Text", size="sm", variant="secondary")
+
                 # ── Quick Problem Buttons (for farmers who can't type) ──
                 gr.Markdown("**🖐️ Tap Your Problem / समस्या चुनें / సమస్య ఎంచుకోండి:**")
                 with gr.Row():
@@ -789,6 +798,82 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         prob_btn4.click(fn=lambda: "White fungus or powder on my crop leaves", inputs=None, outputs=[text_input])
         prob_btn5.click(fn=lambda: "My crop plants are wilting and drying up", inputs=None, outputs=[text_input])
         prob_btn6.click(fn=lambda: "Check if my crop is healthy", inputs=None, outputs=[text_input])
+
+        # ── Voice Input: Groq Whisper Transcription ──────────────────────
+        def transcribe_audio(audio_path, language_name):
+            """Transcribe farmer's voice using Groq Whisper API (free)."""
+            if not audio_path:
+                return "⚠️ Please record audio first"
+
+            groq_key = os.getenv("GROQ_API_KEY", "").strip()
+            if not groq_key:
+                return "⚠️ GROQ_API_KEY not set in .env — get free key at console.groq.com"
+
+            try:
+                import urllib.request
+                import json as _json
+
+                # Map language to Whisper language code
+                lang_map = {
+                    "English": "en", "Hindi": "hi", "Kannada": "kn",
+                    "Telugu": "te", "Tamil": "ta", "Punjabi": "pa",
+                    "Gujarati": "gu", "Marathi": "mr", "Bengali": "bn", "Odia": "or",
+                }
+                whisper_lang = lang_map.get(language_name, "en")
+
+                # Read audio file
+                with open(audio_path, "rb") as f:
+                    audio_data = f.read()
+
+                # Build multipart/form-data request
+                boundary = "----AgriBloomBoundary"
+                body = b""
+
+                # Add file field
+                body += f"--{boundary}\r\n".encode()
+                body += f'Content-Disposition: form-data; name="file"; filename="audio.wav"\r\n'.encode()
+                body += b"Content-Type: audio/wav\r\n\r\n"
+                body += audio_data
+                body += b"\r\n"
+
+                # Add model field
+                body += f"--{boundary}\r\n".encode()
+                body += b'Content-Disposition: form-data; name="model"\r\n\r\n'
+                body += b"whisper-large-v3-turbo\r\n"
+
+                # Add language field
+                body += f"--{boundary}\r\n".encode()
+                body += b'Content-Disposition: form-data; name="language"\r\n\r\n'
+                body += f"{whisper_lang}\r\n".encode()
+
+                body += f"--{boundary}--\r\n".encode()
+
+                req = urllib.request.Request(
+                    "https://api.groq.com/openai/v1/audio/transcriptions",
+                    data=body,
+                    headers={
+                        "Authorization": f"Bearer {groq_key}",
+                        "Content-Type": f"multipart/form-data; boundary={boundary}",
+                    },
+                )
+
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    result = _json.loads(resp.read().decode())
+                    text = result.get("text", "").strip()
+                    if text:
+                        logger.info(f"Groq Whisper transcribed ({len(text)} chars, lang={whisper_lang}): {text[:80]}")
+                        return text
+                    return "⚠️ Could not understand audio. Please try again."
+
+            except Exception as e:
+                logger.error(f"Groq transcription failed: {e}")
+                return f"⚠️ Transcription failed: {str(e)[:60]}"
+
+        transcribe_btn.click(
+            fn=transcribe_audio,
+            inputs=[mic_input, language],
+            outputs=[text_input],
+        )
 
 
 
