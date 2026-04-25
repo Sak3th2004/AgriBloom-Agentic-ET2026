@@ -434,12 +434,15 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
 
                 # ── Voice Input (Groq Whisper — speaks in any language) ──
                 with gr.Accordion("🎤 Speak Your Problem / बोलकर बताएं / ಮಾತನಾಡಿ", open=False):
+                    gr.Markdown("*Click mic → speak → click stop → auto-transcribes*")
                     mic_input = gr.Audio(
                         sources=["microphone"],
                         type="filepath",
-                        label="🎤 Record your voice (speak in any language)",
+                        label="🎤 Record (click mic, speak, click stop)",
+                        format="wav",
+                        max_length=30,
+                        waveform_options=gr.WaveformOptions(show_controls=True),
                     )
-                    transcribe_btn = gr.Button("📝 Convert Speech to Text", size="sm", variant="secondary")
 
                 # ── Quick Problem Buttons (for farmers who can't type) ──
                 gr.Markdown("**🖐️ Tap Your Problem / समस्या चुनें / సమస్య ఎంచుకోండి:**")
@@ -803,7 +806,7 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
         def transcribe_audio(audio_path, language_name):
             """Transcribe farmer's voice using Groq Whisper API (free)."""
             if not audio_path:
-                return "⚠️ Please record audio first"
+                return gr.update()  # Don't overwrite existing text
 
             groq_key = os.getenv("GROQ_API_KEY", "").strip()
             if not groq_key:
@@ -854,6 +857,8 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     headers={
                         "Authorization": f"Bearer {groq_key}",
                         "Content-Type": f"multipart/form-data; boundary={boundary}",
+                        "User-Agent": "AgriBloom/1.0",
+                        "Accept": "application/json",
                     },
                 )
 
@@ -869,7 +874,14 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                 logger.error(f"Groq transcription failed: {e}")
                 return f"⚠️ Transcription failed: {str(e)[:60]}"
 
-        transcribe_btn.click(
+        # Auto-transcribe when farmer stops recording
+        mic_input.stop_recording(
+            fn=transcribe_audio,
+            inputs=[mic_input, language],
+            outputs=[text_input],
+        )
+        # Also transcribe if audio is uploaded
+        mic_input.change(
             fn=transcribe_audio,
             inputs=[mic_input, language],
             outputs=[text_input],
