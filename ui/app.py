@@ -596,10 +596,10 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                         lon=float(lon),
                     )
 
-                # 120s timeout — pipeline must complete in 120 seconds
+                # 300s timeout — pipeline needs time for AI treatment + voice generation
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(_run)
-                    result = future.result(timeout=120)
+                    result = future.result(timeout=300)
 
                 conf = result.get("disease_prediction", {}).get("confidence", 0)
                 source = result.get("disease_prediction", {}).get("source", "")
@@ -624,11 +624,11 @@ def launch_app(run_pipeline: Callable[..., dict[str, Any]]) -> None:
                     new_history,
                 )
             except concurrent.futures.TimeoutError:
-                logger.error("Pipeline timed out after 120 seconds")
+                logger.error("Pipeline timed out after 300 seconds")
                 return (
-                    "⏱️ Analysis is taking too long (exceeded 2 minutes). Please try again or enable Offline Mode.",
+                    "⏱️ Analysis is taking too long. Please try again.",
                     None, None, None,
-                    "❌ **Timeout** — Try Offline Mode or retry",
+                    "❌ **Timeout** — Please retry",
                     history or [],
                 )
             except Exception as e:
