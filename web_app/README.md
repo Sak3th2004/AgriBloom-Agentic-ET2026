@@ -14,3 +14,5 @@ Open `http://localhost:8000`.
 The frontend calls `POST /api/analyze` and renders the backend
 `farmer_advice` contract as action cards.
 
+Feedback is sent to `POST /api/feedback` and stored in the review queue for the
+safe self-learning loop.

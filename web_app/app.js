@@ -13,6 +13,7 @@ const lonInput = document.querySelector("#lonInput");
 const installButton = document.querySelector("#installButton");
 
 let installPrompt = null;
+let latestAdvice = null;
 
 const escapeHtml = (value = "") =>
   String(value).replace(/[&<>"']/g, (char) => ({
@@ -50,6 +51,7 @@ function setProgress(active) {
 }
 
 function renderAdvice(advice) {
+  latestAdvice = advice;
   const risk = String(advice?.risk_level || "unknown");
   const confidence = Number(advice?.confidence || 0);
   const confidenceText = confidence > 0
@@ -102,10 +104,22 @@ function renderAdvice(advice) {
         <div class="metric"><span>Yield risk</span><strong>${escapeHtml(technical.yield_loss_range || "varies")}</strong></div>
       </div>
     </details>
+
+    <section class="advice-section feedback-card">
+      <h3>Help improve AgriBloom</h3>
+      <p>Was this advice useful for your crop?</p>
+      <div class="feedback-actions">
+        <button type="button" data-feedback="useful">Useful</button>
+        <button type="button" data-feedback="not_useful">Not useful</button>
+      </div>
+      <textarea id="feedbackCorrection" rows="3" placeholder="Optional: tell us the correct crop, disease, or what happened in the field."></textarea>
+      <p id="feedbackStatus" class="feedback-status"></p>
+    </section>
   `;
 }
 
 function renderError(message) {
+  latestAdvice = null;
   resultCard.className = "result-card error-card";
   resultCard.innerHTML = `
     <p class="eyebrow">Could not complete check</p>
@@ -120,6 +134,39 @@ imageInput.addEventListener("change", () => {
   previewImage.src = URL.createObjectURL(file);
   previewImage.hidden = false;
   photoDrop.classList.add("has-image");
+});
+
+resultCard.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-feedback]");
+  if (!button || !latestAdvice) return;
+
+  const status = document.querySelector("#feedbackStatus");
+  const correction = document.querySelector("#feedbackCorrection")?.value || "";
+  button.disabled = true;
+  if (status) status.textContent = "Saving feedback...";
+
+  try {
+    const response = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "web",
+        rating: button.dataset.feedback,
+        crop: latestAdvice.crop,
+        problem: latestAdvice.problem,
+        language: document.querySelector("#language")?.value || latestAdvice.language || "en",
+        farmer_text: problemText.value,
+        correction,
+        advice: latestAdvice,
+      }),
+    });
+    if (!response.ok) throw new Error("Feedback could not be saved.");
+    if (status) status.textContent = "Feedback saved for review.";
+  } catch (error) {
+    if (status) status.textContent = error.message || "Feedback failed.";
+  } finally {
+    button.disabled = false;
+  }
 });
 
 problemChips.addEventListener("click", (event) => {
@@ -206,4 +253,3 @@ try {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js").catch(() => {});
 }
-

@@ -10,15 +10,17 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, Response, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,18 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB_DIR = ROOT / "web_app"
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 SUPPORTED_LANGUAGES = {"en", "hi", "kn", "te", "ta", "pa", "gu", "mr", "bn", "or"}
+
+
+class FeedbackPayload(BaseModel):
+    source: str = Field(default="web", max_length=40)
+    rating: str | None = Field(default=None, max_length=20)
+    crop: str | None = Field(default=None, max_length=120)
+    problem: str | None = Field(default=None, max_length=160)
+    language: str = Field(default="en", max_length=10)
+    farmer_text: str = Field(default="", max_length=2000)
+    correction: str = Field(default="", max_length=4000)
+    advice: dict[str, Any] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 def _safe_float(value: str | float | int | None, default: float) -> float:
@@ -131,6 +145,7 @@ def create_app() -> FastAPI:
                 offline=bool(offline),
                 lat=latitude,
                 lon=longitude,
+                generate_artifacts=False,
             )
 
         result = await asyncio.to_thread(_run_pipeline)
@@ -160,6 +175,108 @@ def create_app() -> FastAPI:
         }
         return JSONResponse(content=jsonable_encoder(payload))
 
+    @app.post("/api/feedback")
+    async def feedback(payload: FeedbackPayload) -> dict[str, Any]:
+        from utils.learning_store import record_feedback
+
+        payload_dict = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
+        record = record_feedback(payload_dict)
+        return {
+            "status": "recorded",
+            "feedback_id": record["id"],
+            "review_status": record["review_status"],
+        }
+
+    @app.get("/api/whatsapp/webhook")
+    async def verify_whatsapp_webhook(
+        mode: str | None = Query(default=None, alias="hub.mode"),
+        token: str | None = Query(default=None, alias="hub.verify_token"),
+        challenge: str | None = Query(default=None, alias="hub.challenge"),
+    ) -> Response:
+        expected = os.getenv("WHATSAPP_VERIFY_TOKEN", "").strip()
+        if expected and mode == "subscribe" and token == expected and challenge:
+            return Response(content=challenge, media_type="text/plain")
+        raise HTTPException(status_code=403, detail="WhatsApp webhook verification failed.")
+
+    @app.post("/api/whatsapp/webhook")
+    async def whatsapp_webhook(request: Request) -> dict[str, Any]:
+        from channels.whatsapp import (
+            download_whatsapp_media,
+            format_whatsapp_reply,
+            parse_whatsapp_messages,
+            send_whatsapp_text,
+        )
+        from main import run_pipeline
+        from utils.learning_store import record_feedback
+
+        payload = await request.json()
+        messages = parse_whatsapp_messages(payload)
+        replies: list[dict[str, Any]] = []
+
+        for message in messages:
+            text = (message.get("text") or "").strip()
+            image_obj = None
+
+            if message.get("media_id"):
+                media = await asyncio.to_thread(download_whatsapp_media, str(message["media_id"]))
+                if media:
+                    try:
+                        image_obj = Image.open(io.BytesIO(media)).convert("RGB")
+                    except Exception:
+                        image_obj = None
+
+            if not text and image_obj is None:
+                replies.append({
+                    "to": message.get("from"),
+                    "sent": False,
+                    "reason": "unsupported_message",
+                })
+                continue
+
+            result = await asyncio.to_thread(
+                run_pipeline,
+                image_obj,
+                "",
+                text,
+                "auto",
+                "auto",
+                False,
+                14.4644,
+                75.9218,
+                False,
+                None,
+                False,
+            )
+            advice = result.get("farmer_advice") or {}
+            reply_text = format_whatsapp_reply(advice)
+            sent = await asyncio.to_thread(
+                send_whatsapp_text,
+                str(message.get("from") or ""),
+                reply_text,
+                message.get("phone_number_id"),
+            )
+            if advice:
+                record_feedback({
+                    "source": "whatsapp",
+                    "language": advice.get("language", "auto"),
+                    "crop": advice.get("crop"),
+                    "problem": advice.get("problem"),
+                    "farmer_text": text,
+                    "advice": advice,
+                    "metadata": {
+                        "message_id": message.get("message_id"),
+                        "message_type": message.get("type"),
+                        "reply_sent": sent,
+                    },
+                })
+            replies.append({
+                "to": message.get("from"),
+                "sent": sent,
+                "reply_preview": reply_text[:180],
+            })
+
+        return {"status": "received", "messages": len(messages), "replies": replies}
+
     if WEB_DIR.exists():
         app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
@@ -167,4 +284,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
