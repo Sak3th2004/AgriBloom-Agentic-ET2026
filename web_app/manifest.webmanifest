@@ -1,0 +1,11 @@
+{
+  "name": "AgriBloom Crop Health",
+  "short_name": "AgriBloom",
+  "description": "Crop health advice for farmers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f2e7",
+  "theme_color": "#173f2a",
+  "icons": []
+}
+

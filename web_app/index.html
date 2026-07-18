@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#173f2a" />
+    <meta name="description" content="AgriBloom crop health advice for farmers." />
+    <title>AgriBloom Crop Health</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div class="field-motion" aria-hidden="true"></div>
+        <nav class="topbar" aria-label="Primary">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>AgriBloom</span>
+          </div>
+          <button class="ghost-button" id="installButton" hidden>Install</button>
+        </nav>
+        <section class="hero-copy">
+          <p class="eyebrow">Crop health guidance</p>
+          <h1>Check a crop problem and get clear next steps.</h1>
+          <p>
+            Upload a leaf photo, add what you see, and AgriBloom will return
+            safe farmer-facing advice from the agent pipeline.
+          </p>
+          <div class="hero-stats" aria-label="Service highlights">
+            <span>Photo first</span>
+            <span>Regional languages</span>
+            <span>Safety checked</span>
+          </div>
+        </section>
+      </header>
+
+      <main class="workspace">
+        <section class="panel intake-panel" aria-labelledby="checkTitle">
+          <div class="section-heading">
+            <p class="eyebrow">Start here</p>
+            <h2 id="checkTitle">Check crop health</h2>
+          </div>
+
+          <form id="adviceForm" class="advice-form">
+            <label class="field">
+              <span>Language</span>
+              <select name="language" id="language">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="kn">Kannada</option>
+                <option value="te">Telugu</option>
+                <option value="ta">Tamil</option>
+                <option value="pa">Punjabi</option>
+                <option value="gu">Gujarati</option>
+                <option value="mr">Marathi</option>
+                <option value="bn">Bengali</option>
+                <option value="or">Odia</option>
+              </select>
+            </label>
+
+            <div class="photo-drop" id="photoDrop">
+              <input id="imageInput" name="image" type="file" accept="image/*" capture="environment" />
+              <div class="photo-copy">
+                <strong>Add crop photo</strong>
+                <span>Use daylight and keep the affected leaf close.</span>
+              </div>
+              <img id="previewImage" alt="Selected crop preview" hidden />
+            </div>
+
+            <div class="problem-block">
+              <span class="field-label">What do you see?</span>
+              <div class="chip-grid" id="problemChips">
+                <button type="button" data-problem="Leaf spots">Leaf spots</button>
+                <button type="button" data-problem="Yellow leaves">Yellow leaves</button>
+                <button type="button" data-problem="Insects or pests">Insects</button>
+                <button type="button" data-problem="White fungus or powder">White fungus</button>
+                <button type="button" data-problem="Wilting or drying">Wilting</button>
+                <button type="button" data-problem="Not sure">Not sure</button>
+              </div>
+            </div>
+
+            <label class="field">
+              <span>Describe the problem</span>
+              <textarea
+                id="problemText"
+                name="text"
+                rows="4"
+                placeholder="Example: Tomato leaves have brown spots for 3 days."
+              ></textarea>
+            </label>
+
+            <div class="location-grid">
+              <label class="field">
+                <span>State</span>
+                <input name="state" id="stateInput" placeholder="Karnataka" />
+              </label>
+              <label class="field">
+                <span>District</span>
+                <input name="district" id="districtInput" placeholder="Davangere" />
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="secondary-button" id="locationButton">Use my location</button>
+              <label class="offline-toggle">
+                <input type="checkbox" name="offline" id="offlineToggle" />
+                <span>Prefer offline data</span>
+              </label>
+            </div>
+
+            <input type="hidden" name="lat" id="latInput" />
+            <input type="hidden" name="lon" id="lonInput" />
+
+            <button class="primary-button" id="submitButton" type="submit">
+              Check Crop Health
+            </button>
+          </form>
+        </section>
+
+        <section class="panel result-panel" aria-live="polite">
+          <div id="progressCard" class="progress-card" hidden>
+            <p class="eyebrow">Working</p>
+            <h2>Checking your crop</h2>
+            <div class="steps">
+              <span data-step="photo">Photo received</span>
+              <span data-step="agents">Agents running</span>
+              <span data-step="safety">Safety checked</span>
+            </div>
+          </div>
+
+          <article id="resultCard" class="result-card empty">
+            <p class="eyebrow">Crop health result</p>
+            <h2>No result yet</h2>
+            <p>Add a photo or describe the crop problem. Advice will appear here as action cards.</p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
+
