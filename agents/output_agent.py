@@ -16,6 +16,7 @@ from typing import Any
 from gtts import gTTS
 
 from utils.bloom_simulator import build_bloom_figure
+from utils.farmer_advice import build_farmer_advice, format_farmer_advice_for_text
 from utils.pdf_audit import generate_audit_pdf
 
 logger = logging.getLogger(__name__)
@@ -401,8 +402,16 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
     lang = state.get("lang", state.get("user_language", "en"))
     compliance = state.get("compliance", {})
 
-    # Generate text response
-    response_text = _format_response(state, lang)
+    # Generate structured farmer-facing advice first. The plain text response is
+    # rendered from this object so current UI remains compatible while the next
+    # frontend can consume farmer_advice directly.
+    disease = state.get("disease_prediction", {})
+    disease_label = disease.get("label", "unknown")
+    farmer_advice = build_farmer_advice(
+        state,
+        disease_name=_get_disease_name(disease_label, lang),
+    )
+    response_text = format_farmer_advice_for_text(farmer_advice)
 
     # Setup output directory
     out_dir = Path("models/outputs")
@@ -412,8 +421,6 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
     audio_path = _generate_voice(response_text, lang, out_dir)
 
     # Generate Bloom Simulator chart
-    disease = state.get("disease_prediction", {})
-    disease_label = disease.get("label", "unknown")
     confidence = disease.get("confidence", 0.0)
 
     before_health, after_health = _calculate_health_trajectory(disease_label, confidence)
@@ -442,6 +449,7 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
         "recommendations": state.get("recommendations", [])[:5],
         "weather": state.get("knowledge", {}).get("weather", {}),
         "market": state.get("knowledge", {}).get("market", {}),
+        "farmer_advice": farmer_advice,
         "language": lang,
         "timestamp": datetime.now().isoformat(),
     }
@@ -449,6 +457,7 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
 
     return {
         **state,
+        "farmer_advice": farmer_advice,
         "final_response": response_text,
         "voice_output_path": str(audio_path),
         "bloom_figure": bloom_figure,
