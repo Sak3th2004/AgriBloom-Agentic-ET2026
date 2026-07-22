@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from typing import Any, Callable
 
+from utils.translator import translate_text
+
 
 SCHEMA_VERSION = "1.0"
 UNCERTAIN_LABELS = {
@@ -21,6 +23,252 @@ UNCERTAIN_LABELS = {
     "model_error",
 }
 HELPLINE = {"name": "Kisan Call Center", "number": "1800-180-1551"}
+LOCALIZED_HELPLINES = {
+    "en": HELPLINE,
+    "hi": {"name": "किसान कॉल सेंटर", "number": "1800-180-1551"},
+    "kn": {"name": "ಕಿಸಾನ್ ಕಾಲ್ ಸೆಂಟರ್", "number": "1800-180-1551"},
+    "te": {"name": "కిసాన్ కాల్ సెంటర్", "number": "1800-180-1551"},
+    "ta": {"name": "கிசான் அழைப்பு மையம்", "number": "1800-180-1551"},
+    "pa": {"name": "ਕਿਸਾਨ ਕਾਲ ਸੈਂਟਰ", "number": "1800-180-1551"},
+    "gu": {"name": "કિસાન કોલ સેન્ટર", "number": "1800-180-1551"},
+    "mr": {"name": "किसान कॉल सेंटर", "number": "1800-180-1551"},
+    "bn": {"name": "কিষাণ কল সেন্টার", "number": "1800-180-1551"},
+    "or": {"name": "କିସାନ କଲ୍ ସେଣ୍ଟର", "number": "1800-180-1551"},
+}
+
+TEXT_LABELS = {
+    "en": {
+        "title": "Crop Health Result",
+        "summary": "Summary",
+        "crop": "Crop",
+        "problem": "Likely problem",
+        "risk": "Risk level",
+        "confidence": "Confidence",
+        "what_to_do": "What to do today",
+        "treatment": "Treatment guidance",
+        "do_not": "Do not do this",
+        "expert": "When to call an expert",
+        "help": "Help",
+        "helpline": "Farmer helpline",
+        "questions": "Questions to answer next",
+        "unknown": "Unknown",
+    },
+    "hi": {
+        "title": "फसल स्वास्थ्य परिणाम",
+        "summary": "सारांश",
+        "crop": "फसल",
+        "problem": "संभावित समस्या",
+        "risk": "जोखिम स्तर",
+        "confidence": "विश्वास",
+        "what_to_do": "आज क्या करें",
+        "treatment": "उपचार मार्गदर्शन",
+        "do_not": "यह न करें",
+        "expert": "विशेषज्ञ को कब बुलाएँ",
+        "help": "सहायता",
+        "helpline": "किसान हेल्पलाइन",
+        "questions": "अगले सवाल",
+        "unknown": "अज्ञात",
+    },
+    "kn": {
+        "title": "ಬೆಳೆ ಆರೋಗ್ಯ ಫಲಿತಾಂಶ",
+        "summary": "ಸಾರಾಂಶ",
+        "crop": "ಬೆಳೆ",
+        "problem": "ಸಂಭಾವ್ಯ ಸಮಸ್ಯೆ",
+        "risk": "ಅಪಾಯ ಮಟ್ಟ",
+        "confidence": "ವಿಶ್ವಾಸ",
+        "what_to_do": "ಇಂದು ಮಾಡಬೇಕಾದದ್ದು",
+        "treatment": "ಚಿಕಿತ್ಸೆ ಮಾರ್ಗದರ್ಶನ",
+        "do_not": "ಇದನ್ನು ಮಾಡಬೇಡಿ",
+        "expert": "ತಜ್ಞರನ್ನು ಯಾವಾಗ ಕರೆಬೇಕು",
+        "help": "ಸಹಾಯ",
+        "helpline": "ರೈತ ಸಹಾಯವಾಣಿ",
+        "questions": "ಮುಂದಿನ ಪ್ರಶ್ನೆಗಳು",
+        "unknown": "ಗೊತ್ತಿಲ್ಲ",
+    },
+    "te": {
+        "title": "పంట ఆరోగ్య ఫలితం",
+        "summary": "సారాంశం",
+        "crop": "పంట",
+        "problem": "సంభావ్య సమస్య",
+        "risk": "ప్రమాద స్థాయి",
+        "confidence": "నమ్మకం",
+        "what_to_do": "ఈ రోజు చేయాల్సింది",
+        "treatment": "చికిత్స మార్గదర్శనం",
+        "do_not": "ఇది చేయకండి",
+        "expert": "నిపుణుడిని ఎప్పుడు సంప్రదించాలి",
+        "help": "సహాయం",
+        "helpline": "రైతు హెల్ప్‌లైన్",
+        "questions": "తర్వాతి ప్రశ్నలు",
+        "unknown": "తెలియదు",
+    },
+    "ta": {
+        "title": "பயிர் ஆரோக்கிய முடிவு",
+        "summary": "சுருக்கம்",
+        "crop": "பயிர்",
+        "problem": "சாத்தியமான பிரச்சனை",
+        "risk": "ஆபத்து நிலை",
+        "confidence": "நம்பிக்கை",
+        "what_to_do": "இன்று செய்ய வேண்டியது",
+        "treatment": "சிகிச்சை வழிகாட்டல்",
+        "do_not": "இதை செய்ய வேண்டாம்",
+        "expert": "நிபுணரை எப்போது அழைக்க வேண்டும்",
+        "help": "உதவி",
+        "helpline": "விவசாயி உதவி எண்",
+        "questions": "அடுத்த கேள்விகள்",
+        "unknown": "தெரியவில்லை",
+    },
+    "pa": {
+        "title": "ਫਸਲ ਸਿਹਤ ਨਤੀਜਾ",
+        "summary": "ਸਾਰ",
+        "crop": "ਫਸਲ",
+        "problem": "ਸੰਭਾਵਿਤ ਸਮੱਸਿਆ",
+        "risk": "ਖਤਰੇ ਦਾ ਪੱਧਰ",
+        "confidence": "ਭਰੋਸਾ",
+        "what_to_do": "ਅੱਜ ਕੀ ਕਰਨਾ ਹੈ",
+        "treatment": "ਇਲਾਜ ਦੀ ਸਲਾਹ",
+        "do_not": "ਇਹ ਨਾ ਕਰੋ",
+        "expert": "ਮਾਹਿਰ ਨੂੰ ਕਦੋਂ ਬੁਲਾਉਣਾ ਹੈ",
+        "help": "ਮਦਦ",
+        "helpline": "ਕਿਸਾਨ ਹੈਲਪਲਾਈਨ",
+        "questions": "ਅਗਲੇ ਸਵਾਲ",
+        "unknown": "ਅਣਜਾਣ",
+    },
+    "gu": {
+        "title": "પાક આરોગ્ય પરિણામ",
+        "summary": "સારાંશ",
+        "crop": "પાક",
+        "problem": "સંભવિત સમસ્યા",
+        "risk": "જોખમ સ્તર",
+        "confidence": "વિશ્વાસ",
+        "what_to_do": "આજે શું કરવું",
+        "treatment": "ઉપચાર માર્ગદર્શન",
+        "do_not": "આ ન કરો",
+        "expert": "નિષ્ણાતને ક્યારે બોલાવવો",
+        "help": "મદદ",
+        "helpline": "ખેડૂત હેલ્પલાઇન",
+        "questions": "આગળના પ્રશ્નો",
+        "unknown": "અજ્ઞાત",
+    },
+    "mr": {
+        "title": "पिक आरोग्य निकाल",
+        "summary": "सारांश",
+        "crop": "पीक",
+        "problem": "संभाव्य समस्या",
+        "risk": "जोखीम पातळी",
+        "confidence": "विश्वास",
+        "what_to_do": "आज काय करावे",
+        "treatment": "उपचार मार्गदर्शन",
+        "do_not": "हे करू नका",
+        "expert": "तज्ज्ञांना कधी बोलवावे",
+        "help": "मदत",
+        "helpline": "शेतकरी हेल्पलाइन",
+        "questions": "पुढील प्रश्न",
+        "unknown": "अज्ञात",
+    },
+    "bn": {
+        "title": "ফসল স্বাস্থ্য ফলাফল",
+        "summary": "সারাংশ",
+        "crop": "ফসল",
+        "problem": "সম্ভাব্য সমস্যা",
+        "risk": "ঝুঁকির স্তর",
+        "confidence": "আস্থা",
+        "what_to_do": "আজ কী করবেন",
+        "treatment": "চিকিৎসা নির্দেশনা",
+        "do_not": "এটি করবেন না",
+        "expert": "বিশেষজ্ঞকে কখন ডাকবেন",
+        "help": "সহায়তা",
+        "helpline": "কৃষক হেল্পলাইন",
+        "questions": "পরবর্তী প্রশ্ন",
+        "unknown": "অজানা",
+    },
+    "or": {
+        "title": "ଫସଲ ସ୍ୱାସ୍ଥ୍ୟ ଫଳାଫଳ",
+        "summary": "ସାରାଂଶ",
+        "crop": "ଫସଲ",
+        "problem": "ସମ୍ଭାବ୍ୟ ସମସ୍ୟା",
+        "risk": "ଜୋଖିମ ସ୍ତର",
+        "confidence": "ଭରସା",
+        "what_to_do": "ଆଜି କଣ କରିବେ",
+        "treatment": "ଚିକିତ୍ସା ମାର୍ଗଦର୍ଶନ",
+        "do_not": "ଏହା କରନ୍ତୁ ନାହିଁ",
+        "expert": "ବିଶେଷଜ୍ଞଙ୍କୁ କେବେ ଡାକିବେ",
+        "help": "ସହାୟତା",
+        "helpline": "ଚାଷୀ ହେଲ୍ପଲାଇନ",
+        "questions": "ପରବର୍ତ୍ତୀ ପ୍ରଶ୍ନ",
+        "unknown": "ଅଜଣା",
+    },
+}
+
+TRANSLATABLE_TEXT_KEYS = (
+    "crop",
+    "problem",
+    "summary",
+    "treatment_guidance",
+    "when_to_call_expert",
+)
+TRANSLATABLE_LIST_KEYS = (
+    "what_to_do_today",
+    "what_not_to_do",
+    "safe_alternatives",
+    "next_questions",
+)
+
+
+def _target_language(lang: Any) -> str:
+    code = str(lang or "en").strip().lower().replace("_", "-")
+    return code.split("-", 1)[0] if code else "en"
+
+
+def _contains_local_script(text: str) -> bool:
+    return any(ord(char) > 127 for char in text)
+
+
+def _translate_farmer_text(text: Any, target_lang: str) -> str:
+    raw = str(text or "").strip()
+    if not raw:
+        return raw
+    if target_lang in {"en", "auto", "detect"}:
+        return raw
+    if _contains_local_script(raw):
+        return raw
+
+    try:
+        translated = translate_text(raw, target_lang=target_lang, source_lang="en")
+    except Exception:
+        return raw
+    return str(translated or raw).strip() or raw
+
+
+def _translate_farmer_list(items: Any, target_lang: str) -> list[str]:
+    if not isinstance(items, list):
+        return []
+    return [_translate_farmer_text(item, target_lang) for item in items if str(item or "").strip()]
+
+
+def _localize_farmer_advice(advice: dict[str, Any], lang: Any) -> dict[str, Any]:
+    target_lang = _target_language(lang)
+    advice["language"] = target_lang
+
+    if target_lang in {"en", "auto", "detect"}:
+        advice["helpline"] = LOCALIZED_HELPLINES["en"]
+        return advice
+
+    for key in TRANSLATABLE_TEXT_KEYS:
+        advice[key] = _translate_farmer_text(advice.get(key), target_lang)
+
+    for key in TRANSLATABLE_LIST_KEYS:
+        advice[key] = _translate_farmer_list(advice.get(key), target_lang)
+
+    advice["helpline"] = LOCALIZED_HELPLINES.get(target_lang, HELPLINE)
+    advice.setdefault("technical", {})["localization"] = {
+        "target_language": target_lang,
+        "mode": "machine_translation_with_original_text_fallback",
+    }
+    return advice
+
+
+def _labels_for(lang: Any) -> dict[str, str]:
+    return TEXT_LABELS.get(_target_language(lang), TEXT_LABELS["en"])
 
 
 def _humanize(value: Any) -> str:
@@ -278,7 +526,7 @@ def build_farmer_advice(
     elif status == "needs_clear_photo":
         when_to_call_expert = "Call a local agriculture officer if the crop is wilting, drying, or spreading quickly."
 
-    return {
+    advice = {
         "schema_version": SCHEMA_VERSION,
         "language": lang,
         "status": status,
@@ -319,23 +567,25 @@ def build_farmer_advice(
             },
         },
     }
+    return _localize_farmer_advice(advice, lang)
 
 
 def format_farmer_advice_for_text(advice: dict[str, Any]) -> str:
     """Render farmer_advice as clean plain text for current Gradio textbox/TTS."""
+    labels = _labels_for(advice.get("language", "en"))
     lines = [
-        "Crop Health Result",
+        labels["title"],
         "",
-        f"Summary: {advice.get('summary', '')}",
-        f"Crop: {advice.get('crop', 'Unknown')}",
-        f"Likely problem: {advice.get('problem', 'Unknown')}",
-        f"Risk level: {str(advice.get('risk_level', 'unknown')).title()}",
+        f"{labels['summary']}: {advice.get('summary', '')}",
+        f"{labels['crop']}: {advice.get('crop', labels['unknown'])}",
+        f"{labels['problem']}: {advice.get('problem', labels['unknown'])}",
+        f"{labels['risk']}: {str(advice.get('risk_level', 'unknown')).title()}",
     ]
 
     confidence = advice.get("confidence")
     if isinstance(confidence, (int, float)) and confidence > 0:
         lines.append(
-            f"Confidence: {confidence:.0%} ({str(advice.get('confidence_label', 'unknown')).title()})"
+            f"{labels['confidence']}: {confidence:.0%} ({str(advice.get('confidence_label', 'unknown')).title()})"
         )
 
     def add_section(title: str, items: list[str]) -> None:
@@ -345,23 +595,23 @@ def format_farmer_advice_for_text(advice: dict[str, Any]) -> str:
         for index, item in enumerate(items, 1):
             lines.append(f"{index}. {item}")
 
-    add_section("What to do today", advice.get("what_to_do_today", []))
+    add_section(labels["what_to_do"], advice.get("what_to_do_today", []))
 
     treatment = advice.get("treatment_guidance")
     if treatment:
-        lines.extend(["", "Treatment guidance", str(treatment)])
+        lines.extend(["", labels["treatment"], str(treatment)])
 
-    add_section("Do not do this", advice.get("what_not_to_do", []))
+    add_section(labels["do_not"], advice.get("what_not_to_do", []))
 
     expert = advice.get("when_to_call_expert")
     if expert:
-        lines.extend(["", "When to call an expert", str(expert)])
+        lines.extend(["", labels["expert"], str(expert)])
 
     helpline = advice.get("helpline", {}) or {}
     if helpline.get("number"):
-        lines.extend(["", f"Help: {helpline.get('name', 'Farmer helpline')} - {helpline['number']}"])
+        lines.extend(["", f"{labels['help']}: {helpline.get('name', labels['helpline'])} - {helpline['number']}"])
 
-    add_section("Questions to answer next", advice.get("next_questions", []))
+    add_section(labels["questions"], advice.get("next_questions", []))
 
     return "\n".join(lines).strip()
 
