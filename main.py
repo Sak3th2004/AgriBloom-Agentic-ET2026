@@ -124,7 +124,6 @@ def run_pipeline(
     lon: float = 78.4867,
     allow_path_hints: bool = False,
     model_dir: str | None = None,
-    generate_artifacts: bool = True,
 ) -> dict[str, Any]:
     """
     Run the AgriBloom multi-agent pipeline.
@@ -146,9 +145,8 @@ def run_pipeline(
     """
     start_time = time.time()
 
-    # Normalize language code. "auto" leaves detection to orchestrator.
-    requested_lang = lang or user_language or "en"
-    effective_lang = "" if str(requested_lang).lower() in {"auto", "detect"} else requested_lang
+    # Normalize language code
+    effective_lang = lang or user_language or "en"
 
     # Build initial state
     initial_state: AgriState = {
@@ -164,7 +162,6 @@ def run_pipeline(
         "status": "received",
         "allow_path_hints": allow_path_hints,
         "model_dir": model_dir or "",
-        "generate_artifacts": bool(generate_artifacts),
     }
 
     logger.info(

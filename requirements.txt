@@ -12,9 +12,6 @@ langchain-core>=0.3.0
 
 # --- UI Framework ---
 gradio>=5.0.0
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
-python-multipart>=0.0.9
 
 # --- Deep Learning (CUDA 12.x for RTX 4060) ---
 --extra-index-url https://download.pytorch.org/whl/cu121

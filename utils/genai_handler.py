@@ -1,8 +1,11 @@
 """
-GenAI Handler - configurable multi-backend LLM integration.
+GenAI Handler — Multi-backend LLM Integration
+Priority: NVIDIA API (free) → Google Gemini → Local Ollama
 
-Provider order is controlled by AGRIBLOOM_LLM_ORDER. Cloud credentials must
-come from environment variables; local Ollama remains the offline text fallback.
+Backends:
+1. NVIDIA API (build.nvidia.com) — FREE, 1000 calls/day, powerful 70B+ models
+2. Google Gemini 2.0 Flash — FREE tier, 15 RPM (often rate-limited)
+3. Ollama (local) — Zero rate limits, runs on GPU, good fallback
 """
 from __future__ import annotations
 
@@ -19,8 +22,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_LLM_ORDER = "nvidia,openai,openai_compatible,gemini,ollama"
 
 # ═════════════════════════════════════════════════════════════════════════════
 # NVIDIA API (PRIMARY — free, powerful, reliable)
@@ -111,141 +112,6 @@ def _nvidia_generate(prompt: str, image=None, model: str = None, task: str = "ge
     return ""
 
 
-def _provider_order() -> list[str]:
-    """Return configured provider order with unknown names removed."""
-    raw = os.getenv("AGRIBLOOM_LLM_ORDER", DEFAULT_LLM_ORDER)
-    allowed = {"nvidia", "openai", "openai_compatible", "compatible", "gemini", "ollama"}
-    order: list[str] = []
-    for item in raw.split(","):
-        provider = item.strip().lower().replace("-", "_")
-        if provider in allowed and provider not in order:
-            order.append(provider)
-    return order or DEFAULT_LLM_ORDER.split(",")
-
-
-def _openai_provider_config(provider: str) -> dict[str, str]:
-    """
-    Read OpenAI-compatible provider config from env.
-
-    OpenAI requires OPENAI_API_KEY and OPENAI_MODEL. Custom providers such as
-    Grok/xAI, hosted vLLM, LiteLLM, or internal gateways can use the generic
-    OPENAI_COMPATIBLE_* variables.
-    """
-    provider = provider.strip().lower()
-    if provider == "openai":
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
-        model = (
-            os.getenv("OPENAI_MODEL", "").strip()
-            or os.getenv("OPENAI_CHAT_MODEL", "").strip()
-        )
-        base_url = os.getenv(
-            "OPENAI_BASE_URL",
-            "https://api.openai.com/v1/chat/completions",
-        ).strip()
-        return {"name": "openai", "api_key": api_key, "model": model, "base_url": base_url}
-
-    api_key = (
-        os.getenv("OPENAI_COMPATIBLE_API_KEY", "").strip()
-        or os.getenv("GROK_API_KEY", "").strip()
-        or os.getenv("XAI_API_KEY", "").strip()
-    )
-    model = (
-        os.getenv("OPENAI_COMPATIBLE_MODEL", "").strip()
-        or os.getenv("GROK_MODEL", "").strip()
-        or os.getenv("XAI_MODEL", "").strip()
-    )
-    base_url = (
-        os.getenv("OPENAI_COMPATIBLE_BASE_URL", "").strip()
-        or os.getenv("GROK_BASE_URL", "").strip()
-        or os.getenv("XAI_BASE_URL", "").strip()
-    )
-    return {
-        "name": "openai_compatible",
-        "api_key": api_key,
-        "model": model,
-        "base_url": base_url,
-    }
-
-
-def _openai_compatible_generate(prompt: str, provider: str = "openai", task: str = "general") -> str:
-    """Generate text through any Chat Completions compatible endpoint."""
-    config = _openai_provider_config(provider)
-    api_key = config["api_key"]
-    model = config["model"]
-    base_url = config["base_url"]
-
-    if not api_key or not model or not base_url:
-        return ""
-
-    try:
-        import urllib.request
-        import json as _json
-
-        payload = _json.dumps({
-            "model": model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a practical agricultural advisor. "
-                        "Give farmer-safe, concise, actionable guidance. "
-                        "Do not recommend banned or restricted pesticides."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            "max_tokens": int(os.getenv("AGRIBLOOM_LLM_MAX_TOKENS", "1600")),
-            "temperature": float(os.getenv("AGRIBLOOM_LLM_TEMPERATURE", "0.3")),
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            base_url,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-            },
-        )
-        timeout = float(os.getenv("AGRIBLOOM_LLM_TIMEOUT_SECONDS", "30"))
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = _json.loads(resp.read().decode("utf-8"))
-            text = data["choices"][0]["message"]["content"].strip()
-            if text:
-                logger.info(
-                    "OpenAI-compatible response (%s chars, provider=%s, model=%s, task=%s)",
-                    len(text),
-                    config["name"],
-                    model,
-                    task,
-                )
-            return text
-    except Exception as e:
-        logger.warning(f"OpenAI-compatible provider failed ({provider}, task={task}): {e}")
-        return ""
-
-
-def get_configured_llm_providers(check_ollama: bool = False) -> list[str]:
-    """Return configured LLM providers without making cloud API calls."""
-    providers: list[str] = []
-    if _NVIDIA_API_KEYS:
-        providers.append("nvidia")
-    if _openai_provider_config("openai").get("api_key") and _openai_provider_config("openai").get("model"):
-        providers.append("openai")
-    compatible = _openai_provider_config("openai_compatible")
-    if compatible.get("api_key") and compatible.get("model") and compatible.get("base_url"):
-        providers.append("openai_compatible")
-    if API_KEYS:
-        providers.append("gemini")
-    if check_ollama:
-        try:
-            import urllib.request
-            urllib.request.urlopen("http://localhost:11434/api/tags", timeout=2)
-            providers.append("ollama")
-        except Exception:
-            pass
-    return providers
-
-
 # ═════════════════════════════════════════════════════════════════════════════
 # Google Gemini (SECONDARY — often rate-limited)
 # ═════════════════════════════════════════════════════════════════════════════
@@ -256,8 +122,8 @@ _API_KEY = None
 
 API_KEYS = [
     os.getenv("GEMINI_API_KEY", "").strip(),
-    os.getenv("GEMINI_API_KEY_2", "").strip(),
-    os.getenv("GEMINI_API_KEY_3", "").strip(),
+    "AIzaSyBlk9z1cK7DsCvRgSN4STUocuaRcmrEt-A",
+    "AIzaSyCUbaDfu6O_fV7RFItFDMztq8c9VUvf4N8"
 ]
 API_KEYS = [k for k in API_KEYS if k]
 _CURRENT_KEY_IDX = 0
@@ -339,78 +205,71 @@ def _ollama_generate(prompt: str) -> str:
 _GEMINI_COOLDOWN_UNTIL = 0
 
 def _generate(prompt: str, image=None, task: str = "general") -> str:
-    """Unified LLM call using AGRIBLOOM_LLM_ORDER."""
+    """Unified LLM call: NVIDIA → Gemini → Ollama. Auto-rotates on failure."""
     global _CURRENT_KEY_IDX, _GEMINI_COOLDOWN_UNTIL
     import time
 
-    for provider in _provider_order():
-        if provider == "nvidia" and _NVIDIA_API_KEYS:
-            result = _nvidia_generate(prompt, image, task=task)
-            if result:
-                return result
+    # ── 1. Try NVIDIA API first (powerful, free, supports vision) ──────
+    if _NVIDIA_API_KEYS:
+        result = _nvidia_generate(prompt, image, task=task)
+        if result:
+            return result
 
-        if provider in {"openai", "openai_compatible", "compatible"} and image is None:
-            result = _openai_compatible_generate(prompt, provider=provider, task=task)
-            if result:
-                return result
+    # ── 2. Try Gemini (supports images) ────────────────────────────────
+    _get_gemini_model()
+    if _GEMINI_AVAILABLE is True and time.time() > _GEMINI_COOLDOWN_UNTIL:
+        # Try each Gemini key once only (fast fail)
+        for attempt in range(len(API_KEYS)):
+            try:
+                if _GEMINI_SDK == "new":
+                    from google import genai as genai_new
+                    fresh_client = genai_new.Client(api_key=API_KEYS[_CURRENT_KEY_IDX])
+                    contents = [prompt]
+                    if image is not None:
+                        contents = [image, prompt]
+                    response = fresh_client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=contents,
+                    )
+                    result = response.text.strip()
+                    if result:
+                        return result
+                else:
+                    if image is not None:
+                        response = _GEMINI_CLIENT.generate_content([image, prompt])
+                    else:
+                        response = _GEMINI_CLIENT.generate_content(prompt)
+                    result = response.text.strip()
+                    if result:
+                        return result
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                    logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
+                    _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
+                    _get_gemini_model(force_reinit=True)
+                    continue
+                logger.warning(f"Gemini generation failed: {e}")
+                break
+        # If we get here, all keys failed
+        _GEMINI_COOLDOWN_UNTIL = time.time() + 60
+        logger.warning("All Gemini keys exhausted — cooldown 60s")
+    elif _GEMINI_AVAILABLE is True:
+        logger.info("Gemini in cooldown — skipping to Ollama")
 
-        if provider == "gemini":
-            _get_gemini_model()
-            if _GEMINI_AVAILABLE is True and time.time() > _GEMINI_COOLDOWN_UNTIL:
-                # Try each Gemini key once only (fast fail)
-                for attempt in range(len(API_KEYS)):
-                    try:
-                        if _GEMINI_SDK == "new":
-                            from google import genai as genai_new
-                            fresh_client = genai_new.Client(api_key=API_KEYS[_CURRENT_KEY_IDX])
-                            contents = [prompt]
-                            if image is not None:
-                                contents = [image, prompt]
-                            response = fresh_client.models.generate_content(
-                                model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
-                                contents=contents,
-                            )
-                            result = response.text.strip()
-                            if result:
-                                return result
-                        else:
-                            if image is not None:
-                                response = _GEMINI_CLIENT.generate_content([image, prompt])
-                            else:
-                                response = _GEMINI_CLIENT.generate_content(prompt)
-                            result = response.text.strip()
-                            if result:
-                                return result
-                    except Exception as e:
-                        error_str = str(e)
-                        if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
-                            logger.warning(f"Gemini Key {_CURRENT_KEY_IDX} rate limited.")
-                            _CURRENT_KEY_IDX = (_CURRENT_KEY_IDX + 1) % len(API_KEYS)
-                            _get_gemini_model(force_reinit=True)
-                            continue
-                        logger.warning(f"Gemini generation failed: {e}")
-                        break
-                _GEMINI_COOLDOWN_UNTIL = time.time() + 60
-                logger.warning("All Gemini keys exhausted - cooldown 60s")
-            elif _GEMINI_AVAILABLE is True:
-                logger.info("Gemini in cooldown - skipping")
+    # ── 3. Fallback to local Ollama (text only, no images) ─────────────
+    if image is None:
+        result = _ollama_generate(prompt)
+        if result:
+            return result
 
-        if provider == "ollama" and image is None:
-            result = _ollama_generate(prompt)
-            if result:
-                return result
-
-    logger.error("All configured LLM backends failed")
+    logger.error("All LLM backends failed (NVIDIA + Gemini + Ollama)")
     return ""
 
 
 def is_genai_available() -> bool:
-    """Check if any LLM backend is configured or locally available."""
+    """Check if any LLM backend is available (NVIDIA, Gemini, or Ollama)."""
     if _NVIDIA_API_KEYS:
-        return True
-    if "openai" in get_configured_llm_providers(check_ollama=False):
-        return True
-    if "openai_compatible" in get_configured_llm_providers(check_ollama=False):
         return True
     model = _get_gemini_model()
     if model is not None:
@@ -433,7 +292,7 @@ def generate_treatment_advice(
     context: str = "",
 ) -> str:
     """
-    Generate farmer-friendly treatment explanation using the configured LLM provider chain.
+    Generate farmer-friendly treatment explanation using Gemini.
 
     Args:
         disease: Detected disease name
@@ -802,7 +661,6 @@ def conversational_followup(
 
 # Export
 __all__ = [
-    "get_configured_llm_providers",
     "is_genai_available",
     "generate_treatment_advice",
     "analyze_unknown_crop",

@@ -16,7 +16,6 @@ from typing import Any
 from gtts import gTTS
 
 from utils.bloom_simulator import build_bloom_figure
-from utils.farmer_advice import build_farmer_advice, format_farmer_advice_for_text
 from utils.pdf_audit import generate_audit_pdf
 
 logger = logging.getLogger(__name__)
@@ -402,68 +401,56 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
     lang = state.get("lang", state.get("user_language", "en"))
     compliance = state.get("compliance", {})
 
-    # Generate structured farmer-facing advice first. The plain text response is
-    # rendered from this object so current UI remains compatible while the next
-    # frontend can consume farmer_advice directly.
-    disease = state.get("disease_prediction", {})
-    disease_label = disease.get("label", "unknown")
-    farmer_advice = build_farmer_advice(
-        state,
-        disease_name=_get_disease_name(disease_label, lang),
-    )
-    response_text = format_farmer_advice_for_text(farmer_advice)
+    # Generate text response
+    response_text = _format_response(state, lang)
+
+    # Setup output directory
+    out_dir = Path("models/outputs")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate voice
+    audio_path = _generate_voice(response_text, lang, out_dir)
 
     # Generate Bloom Simulator chart
+    disease = state.get("disease_prediction", {})
+    disease_label = disease.get("label", "unknown")
     confidence = disease.get("confidence", 0.0)
-    audio_path = None
-    bloom_figure = None
-    audit_pdf_path = None
 
-    if state.get("generate_artifacts", True):
-        # Setup output directory
-        out_dir = Path("models/outputs")
-        out_dir.mkdir(parents=True, exist_ok=True)
+    before_health, after_health = _calculate_health_trajectory(disease_label, confidence)
+    bloom_figure = build_bloom_figure(
+        before_health=before_health,
+        after_health=after_health,
+        days=14,
+    )
 
-        # Generate voice
-        audio_path = _generate_voice(response_text, lang, out_dir)
-
-        before_health, after_health = _calculate_health_trajectory(disease_label, confidence)
-        bloom_figure = build_bloom_figure(
-            before_health=before_health,
-            after_health=after_health,
-            days=14,
-        )
-
-        # Generate audit PDF
-        audit_payload = {
-            "disease": disease_label,
-            "disease_localized": _get_disease_name(disease_label, lang),
-            "confidence": f"{confidence:.2%}",
-            "crop_type": state.get("crop_type", "unknown"),
-            "compliance_allowed": compliance.get("allowed", True),
-            "risk_level": compliance.get("risk_level", "low"),
-            "violations": ", ".join(
-                v.get("name", str(v)) if isinstance(v, dict) else str(v)
-                for v in compliance.get("violations", [])
-            ) or "None",
-            "disclaimers": " | ".join(
-                d if isinstance(d, str) else str(d)
-                for d in compliance.get("disclaimers", [])[:3]
-            ),
-            "recommendations": state.get("recommendations", [])[:5],
-            "weather": state.get("knowledge", {}).get("weather", {}),
-            "market": state.get("knowledge", {}).get("market", {}),
-            "farmer_advice": farmer_advice,
-            "language": lang,
-            "timestamp": datetime.now().isoformat(),
-        }
-        audit_pdf_path = generate_audit_pdf(audit_payload)
+    # Generate audit PDF
+    audit_payload = {
+        "disease": disease_label,
+        "disease_localized": _get_disease_name(disease_label, lang),
+        "confidence": f"{confidence:.2%}",
+        "crop_type": state.get("crop_type", "unknown"),
+        "compliance_allowed": compliance.get("allowed", True),
+        "risk_level": compliance.get("risk_level", "low"),
+        "violations": ", ".join(
+            v.get("name", str(v)) if isinstance(v, dict) else str(v)
+            for v in compliance.get("violations", [])
+        ) or "None",
+        "disclaimers": " | ".join(
+            d if isinstance(d, str) else str(d)
+            for d in compliance.get("disclaimers", [])[:3]
+        ),
+        "recommendations": state.get("recommendations", [])[:5],
+        "weather": state.get("knowledge", {}).get("weather", {}),
+        "market": state.get("knowledge", {}).get("market", {}),
+        "language": lang,
+        "timestamp": datetime.now().isoformat(),
+    }
+    audit_pdf_path = generate_audit_pdf(audit_payload)
 
     return {
         **state,
-        "farmer_advice": farmer_advice,
         "final_response": response_text,
-        "voice_output_path": str(audio_path) if audio_path else None,
+        "voice_output_path": str(audio_path),
         "bloom_figure": bloom_figure,
         "audit_pdf_path": audit_pdf_path,
         "status": "output_complete",
