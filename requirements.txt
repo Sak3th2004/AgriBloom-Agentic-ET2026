@@ -41,6 +41,10 @@ onnx>=1.16.0
 Pillow>=10.3.0
 opencv-python>=4.9.0
 
+# --- V2 Vision Ensemble: DINOv2 (via transformers) + FAISS KNN ---
+# faiss-cpu is optional — dinov2_knn.py falls back to numpy brute force if absent.
+faiss-cpu>=1.8.0
+
 # --- Data Science ---
 numpy>=1.26.0
 pandas>=2.2.0
