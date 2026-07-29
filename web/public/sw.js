@@ -1,7 +1,14 @@
 /* AgriBloom service worker — app-shell caching + offline fallback. */
-const CACHE = "agribloom-v1";
+const CACHE = "agribloom-v2";
 const OFFLINE_URL = "/offline";
-const PRECACHE = ["/", OFFLINE_URL, "/manifest.json", "/icons/leaf.svg"];
+const PRECACHE = [
+  "/",
+  OFFLINE_URL,
+  "/manifest.json",
+  "/icons/leaf.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

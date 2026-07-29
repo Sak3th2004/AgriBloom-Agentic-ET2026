@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f9f8f4"/>
+  <rect width="1200" height="14" fill="#14532d"/>
+  <rect y="616" width="1200" height="14" fill="#14532d"/>
+  <g transform="translate(120, 175)">
+    <rect width="280" height="280" rx="62" fill="#14532d"/>
+    <path d="M140 52c-48 27-74 65-74 108 0 36 27 68 74 68s74-32 74-68c0-43-26-81-74-108z" fill="#4ade80"/>
+    <path d="M140 76v132M140 110l-31 24M140 142l33 22" stroke="#14532d" stroke-width="11" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="470" y="285" font-family="Segoe UI, Arial, sans-serif" font-size="88" font-weight="800" fill="#14532d">AgriBloom</text>
+  <text x="472" y="355" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#3f4a42">Free AI crop doctor - in your language</text>
+  <text x="472" y="420" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="500" fill="#6b7a70">Scan a leaf | Safe, regulation-checked advice | 10 languages</text>
+</svg>
