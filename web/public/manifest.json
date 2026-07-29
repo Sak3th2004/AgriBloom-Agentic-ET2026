@@ -1,0 +1,30 @@
+{
+  "name": "AgriBloom — Free AI Crop Doctor",
+  "short_name": "AgriBloom",
+  "description": "Scan a leaf, ask in your language, get safe crop treatment advice. Free & open source.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f8f4",
+  "theme_color": "#14532d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/leaf.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/leaf.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/leaf-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
