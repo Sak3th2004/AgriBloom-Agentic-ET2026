@@ -245,16 +245,47 @@ RESPONSE_TEMPLATES = {
 }
 
 
+# WMO weather-code → human description (Open-Meteo uses these codes).
+WMO_WEATHER_CODES: dict[int, str] = {
+    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+    45: "Fog", 48: "Depositing rime fog",
+    51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+    56: "Light freezing drizzle", 57: "Dense freezing drizzle",
+    61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+    66: "Light freezing rain", 67: "Heavy freezing rain",
+    71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow", 77: "Snow grains",
+    80: "Slight rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
+    85: "Slight snow showers", 86: "Heavy snow showers",
+    95: "Thunderstorm", 96: "Thunderstorm with slight hail", 99: "Thunderstorm with heavy hail",
+}
+
+
+def _wmo_desc(code: Any) -> str:
+    """Map a WMO weather code to a description (empty string if unknown)."""
+    try:
+        return WMO_WEATHER_CODES.get(int(code), "")
+    except (TypeError, ValueError):
+        return ""
+
+
 def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
-    """Fetch weather: OpenWeatherMap (rich) → Open-Meteo (free fallback)."""
+    """Fetch LIVE weather: OpenWeatherMap (rich) → Open-Meteo (free, no key).
+
+    Every result carries ``is_live``: True only for a real API reading. Defaults
+    and offline placeholders are flagged ``is_live=False`` with a ``note`` so a
+    guess is never presented to the farmer as a live measurement.
+    """
     cache_key = f"weather:{lat:.2f}:{lon:.2f}"
 
     if offline:
         cached = CACHE.get(cache_key, ttl_seconds=86400)
         if cached:
             cached["source"] = "offline_cache"
+            cached.setdefault("is_live", False)
+            cached["note"] = "Last cached reading (offline mode)"
             return cached
-        return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "offline_default"}
+        return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "offline_default",
+                "is_live": False, "note": "Estimate — no live data available offline"}
 
     # ── Try OpenWeatherMap first (better data) ──
     owm_key = os.environ.get("OPENWEATHER_API_KEY", "").strip()
@@ -282,6 +313,7 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
                 "weather_desc": weather_desc.title(),
                 "forecast_3day_rain": 0,
                 "source": "openweathermap",
+                "is_live": True,
                 "timestamp": datetime.now().isoformat(),
             }
             CACHE.set(cache_key, result)
@@ -295,7 +327,7 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
         url = (
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}"
-            f"&current=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m"
+            f"&current=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m,weather_code"
             f"&daily=precipitation_sum,temperature_2m_max,temperature_2m_min"
             f"&timezone=auto&forecast_days=3"
         )
@@ -312,12 +344,18 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
             "rain_mm": current.get("precipitation", 0.0),
             "humidity": current.get("relative_humidity_2m", 65),
             "wind_speed": current.get("wind_speed_10m", 5.0),
+            "weather_desc": _wmo_desc(current.get("weather_code")),
             "forecast_3day_rain": sum(daily.get("precipitation_sum", [0, 0, 0])[:3]),
             "source": "open-meteo",
+            "is_live": True,
             "timestamp": datetime.now().isoformat(),
         }
 
         CACHE.set(cache_key, result)
+        logger.info(
+            "Open-Meteo LIVE: %s°C, %s, humidity=%s%%",
+            result["temp_c"], result["weather_desc"] or "n/a", result["humidity"],
+        )
         return result
 
     except Exception as e:
@@ -325,8 +363,11 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
         cached = CACHE.get(cache_key, ttl_seconds=86400)
         if cached:
             cached["source"] = "cache_fallback"
+            cached.setdefault("is_live", False)
+            cached["note"] = "Recent cached reading (live fetch failed)"
             return cached
-        return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "api_error"}
+        return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "api_error",
+                "is_live": False, "note": "Estimate — live weather unavailable"}
 
 
 def _find_nearest_mandi(crop: str, lat: float, lon: float) -> dict[str, Any]:
@@ -375,6 +416,11 @@ def _get_market_price(crop: str, lat: float, lon: float, offline: bool) -> dict[
         "state": mandi["state"],
         "distance_km": mandi["distance_km"],
         "price_trend": "stable" if abs(variation - 1.0) < 0.05 else ("up" if variation > 1.0 else "down"),
+        # Honest flag: this is an MSP-anchored indicative estimate, NOT a live
+        # eNAM quote. Kept transparent so it's never shown as a live price.
+        "is_live": False,
+        "is_estimate": True,
+        "note": "Indicative estimate anchored to 2025 MSP; live eNAM integration pending",
         "source": "market_model",
         "timestamp": datetime.now().isoformat(),
     }
