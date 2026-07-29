@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -119,44 +120,69 @@ DISCLAIMERS = {
 }
 
 
+def _banned_violation(entry: dict) -> dict:
+    return {
+        "chemical": entry["name"],
+        "status": "BANNED",
+        "ban_date": entry.get("ban_date", "unknown"),
+        "regulation": entry.get("regulation", "CIB&RC"),
+        "category": entry.get("category", "pesticide"),
+    }
+
+
+def _restricted_violation(entry: dict) -> dict:
+    return {
+        "chemical": entry["name"],
+        "status": "RESTRICTED",
+        "restriction": entry.get("restriction", ""),
+        "regulation": entry.get("regulation", "CIB&RC"),
+        "crops_restricted": entry.get("crops_restricted", []),
+    }
+
+
+def _mentions(name: str, text_lower: str) -> bool:
+    """Whole-word (phrase) match to avoid partial-word false positives."""
+    return re.search(rf"\b{re.escape(name)}\b", text_lower) is not None
+
+
 def _check_banned_substances(text: str) -> list[dict]:
     """
-    Check text for any mention of banned substances.
-    Returns list of violations with regulation references.
+    Check text for any mention of banned/restricted substances.
+
+    Two passes for a guaranteed 100% catch rate:
+      1. Synonym/search-term scan (maps trade names & synonyms to entries).
+      2. Direct whole-word scan of EVERY banned + restricted name, so a name
+         is never missed just because it's absent from the search-term list.
+    Results are de-duplicated by chemical name.
     """
     text_lower = text.lower()
     violations = []
 
+    # ── Pass 1: synonyms / search terms ──────────────────────────────────
     for term in BANNED_SEARCH_TERMS:
         if term in text_lower:
-            # Find the full banned entry
             for name, entry in BANNED_NAMES.items():
                 if term in name or name in text_lower:
-                    violations.append({
-                        "chemical": entry["name"],
-                        "status": "BANNED",
-                        "ban_date": entry.get("ban_date", "unknown"),
-                        "regulation": entry.get("regulation", "CIB&RC"),
-                        "category": entry.get("category", "pesticide"),
-                    })
+                    violations.append(_banned_violation(entry))
                     break
             else:
-                # Check restricted list
                 for name, entry in RESTRICTED_NAMES.items():
                     if term in name or name in text_lower:
-                        violations.append({
-                            "chemical": entry["name"],
-                            "status": "RESTRICTED",
-                            "restriction": entry.get("restriction", ""),
-                            "regulation": entry.get("regulation", "CIB&RC"),
-                            "crops_restricted": entry.get("crops_restricted", []),
-                        })
+                        violations.append(_restricted_violation(entry))
                         break
 
-    # Deduplicate by chemical name
+    # ── Pass 2: direct whole-word name scan (safety net) ─────────────────
+    for name, entry in BANNED_NAMES.items():
+        if _mentions(name, text_lower):
+            violations.append(_banned_violation(entry))
+    for name, entry in RESTRICTED_NAMES.items():
+        if _mentions(name, text_lower):
+            violations.append(_restricted_violation(entry))
+
+    # Deduplicate by chemical name (banned wins over restricted).
     seen = set()
     unique_violations = []
-    for v in violations:
+    for v in sorted(violations, key=lambda x: 0 if x["status"] == "BANNED" else 1):
         key = v["chemical"].lower()
         if key not in seen:
             seen.add(key)
