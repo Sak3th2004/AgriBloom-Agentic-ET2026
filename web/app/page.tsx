@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { AlertCircle, MapPin, Sparkles } from "lucide-react";
+import { AlertCircle, Loader2, MapPin } from "lucide-react";
 import { diagnose } from "@/lib/api";
 import { saveDiagnosis } from "@/lib/history";
 import districts from "@/lib/constants/districts.json";
@@ -54,15 +54,9 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5">
-      {/* Hero */}
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="hero-gradient rounded-lg border p-5"
-      >
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          {t("app.name")}
-        </h1>
+      {/* Header */}
+      <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t("app.name")}</h1>
         <p className="mt-1 text-sm font-medium text-muted-foreground">
           {t("app.tagline")}
         </p>
@@ -129,7 +123,8 @@ export default function HomePage() {
         onClick={submit}
         disabled={mutation.isPending}
       >
-        <Sparkles /> {mutation.isPending ? t("home.analyzing") : t("home.submit")}
+        {mutation.isPending && <Loader2 className="animate-spin" />}
+        {mutation.isPending ? t("home.analyzing") : t("home.submit")}
       </Button>
 
       <AgentStepper active={mutation.isPending} />
