@@ -12,7 +12,7 @@ export async function GET() {
     quick_symptoms: QUICK_SYMPTOMS.map((s) => ({
       id: s.id,
       label: s.id.replace(/_/g, " "),
-      icon: s.emoji,
+      icon: s.id,
     })),
     districts,
   });

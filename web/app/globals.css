@@ -70,9 +70,4 @@
   .safe-bottom {
     padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
   }
-  .hero-gradient {
-    background:
-      radial-gradient(60rem 22rem at 110% -10%, hsl(var(--accent) / 0.14), transparent 60%),
-      radial-gradient(50rem 20rem at -20% -20%, hsl(var(--primary) / 0.16), transparent 60%);
-  }
 }

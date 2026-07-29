@@ -2,17 +2,17 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Brain, Check, FileCheck2, Loader2, ScanEye, Sparkles, BookOpenCheck } from "lucide-react";
+import { BookOpenCheck, Check, FileCheck2, FileText, Loader2, MessageSquareText, ScanEye } from "lucide-react";
 import { diagnoseStreamUrl } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const STAGES = [
-  { id: "orchestrator", icon: Brain },
+  { id: "orchestrator", icon: MessageSquareText },
   { id: "vision", icon: ScanEye },
   { id: "knowledge", icon: BookOpenCheck },
   { id: "compliance", icon: FileCheck2 },
-  { id: "output", icon: Sparkles },
+  { id: "output", icon: FileText },
 ] as const;
 
 /**
