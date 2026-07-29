@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, agribloom-v2]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint + test tooling
+        run: pip install ruff pytest
+
+      # Informational for now (legacy V1 not yet linted); tightened as V2 code lands.
+      - name: Ruff (informational)
+        run: ruff check . || true
+
+      # Blocking gate. Heavy ML deps are mocked/optional in the compliance suite.
+      - name: Run tests
+        run: pytest tests/ -v

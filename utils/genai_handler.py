@@ -120,10 +120,12 @@ _GEMINI_AVAILABLE = None
 _GEMINI_SDK = None
 _API_KEY = None
 
+# Gemini API keys are read from the environment only — never hardcode secrets.
+# Supports multiple keys for rotation via GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3.
 API_KEYS = [
     os.getenv("GEMINI_API_KEY", "").strip(),
-    "AIzaSyBlk9z1cK7DsCvRgSN4STUocuaRcmrEt-A",
-    "AIzaSyCUbaDfu6O_fV7RFItFDMztq8c9VUvf4N8"
+    os.getenv("GEMINI_API_KEY_2", "").strip(),
+    os.getenv("GEMINI_API_KEY_3", "").strip(),
 ]
 API_KEYS = [k for k in API_KEYS if k]
 _CURRENT_KEY_IDX = 0
@@ -421,7 +423,8 @@ def analyze_unknown_crop(image_path: str, language: str = "en") -> dict[str, Any
             "crop": "unknown",
             "disease": "unknown",
             "confidence": "low",
-            "treatment": response.text.strip() if 'response' in dir() else "Visit nearest KVK",
+            # `text` holds the raw model output; fall back to KVK advice if it's empty.
+            "treatment": (text.strip() if text and text.strip() else "Visit nearest KVK"),
             "is_fallback": True,
             "source": "gemini_vision_text",
         }

@@ -1,0 +1,25 @@
+[project]
+name = "agribloom-agentic"
+version = "2.0.0"
+description = "Open-source, free, scalable multi-agent agricultural advisory for Indian farmers."
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+# Legacy V1 modules are linted informationally in CI; new V2 code should be clean.
+extend-exclude = [
+    ".venv",
+    ".venv-gpu-windows-backup",
+    ".git-backup",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+# Start small so CI is meaningful without a huge legacy cleanup; expand for V2 dirs.
+select = ["E", "F", "I"]
+ignore = ["E501"]  # line length handled by formatter; not worth failing on legacy
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"

@@ -195,10 +195,16 @@ def _format_response(state: dict[str, Any], lang: str = "en") -> str:
 
     # Check compliance first
     if not compliance.get("allowed", True):
+        # `violations` is a list of dicts (see compliance_agent); render the
+        # chemical name for each, tolerating any stray non-dict entries.
+        blocked = ", ".join(
+            v.get("chemical", str(v)) if isinstance(v, dict) else str(v)
+            for v in compliance.get("violations", [])
+        )
         return (
             f"⚠️ {templates['compliance_alert']}\n\n"
             f"❌ {templates['consult']}\n\n"
-            f"Blocked substances: {', '.join(compliance.get('violations', []))}"
+            f"Blocked substances: {blocked}"
         )
 
     # Build response
@@ -432,7 +438,7 @@ def run_output(state: dict[str, Any]) -> dict[str, Any]:
         "compliance_allowed": compliance.get("allowed", True),
         "risk_level": compliance.get("risk_level", "low"),
         "violations": ", ".join(
-            v.get("name", str(v)) if isinstance(v, dict) else str(v)
+            v.get("chemical", str(v)) if isinstance(v, dict) else str(v)
             for v in compliance.get("violations", [])
         ) or "None",
         "disclaimers": " | ".join(

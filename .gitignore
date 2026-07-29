@@ -57,3 +57,10 @@ Thumbs.db
 
 # Kaggle
 kaggle.json
+
+# Local backups & scratch (must never be committed)
+.git-backup/
+.venv-gpu-windows-backup/
+.aider*
+PROJECT_KNOWLEDGE_GRAPH.md
+
