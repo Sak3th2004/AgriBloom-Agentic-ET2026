@@ -109,8 +109,28 @@ def build_graph() -> Any:
     return compiled
 
 
+def _build_active_graph() -> Any:
+    """Pick the pipeline: V1 linear (default) or the V2 ReAct graph.
+
+    Set ``AGRIBLOOM_USE_REACT=1`` to route through the dynamic ReAct
+    orchestrator (graph/react_graph.py). Defaults to the proven linear graph so
+    the winning V1 behaviour is never disturbed by accident.
+    """
+    import os
+
+    if os.getenv("AGRIBLOOM_USE_REACT", "0") == "1":
+        try:
+            from graph.react_graph import build_react_graph
+
+            logger.info("AGRIBLOOM_USE_REACT=1 → using ReAct dynamic graph")
+            return build_react_graph()
+        except Exception as e:
+            logger.error("ReAct graph failed to build (%s) — falling back to linear", e)
+    return build_graph()
+
+
 # Build graph at module load time
-GRAPH = build_graph()
+GRAPH = _build_active_graph()
 
 
 def run_pipeline(
