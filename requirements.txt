@@ -60,6 +60,10 @@ kaleido>=0.2.1
 reportlab>=4.2.0
 
 # --- Speech & Voice ---
+# V2: faster-whisper (local GPU STT) + edge-tts (free neural Indic voices).
+# Both are primary; openai-whisper/gTTS remain as fallbacks.
+faster-whisper>=1.0.0
+edge-tts>=6.1.0
 openai-whisper>=20231117
 gTTS>=2.5.0
 pydub>=0.25.1
