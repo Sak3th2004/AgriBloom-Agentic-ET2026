@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 156 30% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 156 30% 12%;
+    --primary: 152 60% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 25% 93%;
+    --secondary-foreground: 156 30% 14%;
+    --muted: 150 20% 94%;
+    --muted-foreground: 154 12% 40%;
+    --accent: 42 92% 52%;
+    --accent-foreground: 30 60% 12%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 145 63% 32%;
+    --success-foreground: 0 0% 100%;
+    --border: 150 18% 88%;
+    --input: 150 18% 86%;
+    --ring: 152 60% 30%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 160 25% 7%;
+    --foreground: 150 15% 92%;
+    --card: 160 22% 10%;
+    --card-foreground: 150 15% 92%;
+    --primary: 150 55% 45%;
+    --primary-foreground: 160 35% 7%;
+    --secondary: 158 15% 15%;
+    --secondary-foreground: 150 15% 90%;
+    --muted: 158 15% 15%;
+    --muted-foreground: 152 10% 62%;
+    --accent: 42 92% 52%;
+    --accent-foreground: 30 60% 10%;
+    --destructive: 0 65% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 145 55% 42%;
+    --success-foreground: 160 35% 7%;
+    --border: 158 14% 20%;
+    --input: 158 14% 22%;
+    --ring: 150 55% 45%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Comfortable thumb targets on touch devices */
+  button,
+  a,
+  select,
+  input[type="checkbox"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+  .hero-gradient {
+    background:
+      radial-gradient(60rem 22rem at 110% -10%, hsl(var(--accent) / 0.14), transparent 60%),
+      radial-gradient(50rem 20rem at -20% -20%, hsl(var(--primary) / 0.16), transparent 60%);
+  }
+}
