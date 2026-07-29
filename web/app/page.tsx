@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { AlertCircle, Loader2, MapPin } from "lucide-react";
+import { AlertCircle, Check, Loader2, LocateFixed, MapPin } from "lucide-react";
 import { diagnose } from "@/lib/api";
 import { saveDiagnosis } from "@/lib/history";
 import districts from "@/lib/constants/districts.json";
@@ -17,6 +17,13 @@ import { MicRecorder } from "@/components/mic-recorder";
 import { QuickSymptomChips } from "@/components/quick-symptom-chips";
 import { AgentStepper } from "@/components/agent-stepper";
 
+const COORDS_KEY = "agribloom.coords";
+
+interface Coords {
+  lat: number;
+  lon: number;
+}
+
 export default function HomePage() {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -26,6 +33,50 @@ export default function HomePage() {
   const [district, setDistrict] = React.useState(districts[0].name);
   const [offline, setOffline] = React.useState(false);
   const [inputError, setInputError] = React.useState(false);
+  const [coords, setCoords] = React.useState<Coords | null>(null);
+  const [geoStatus, setGeoStatus] = React.useState<
+    "idle" | "loading" | "set" | "error"
+  >("idle");
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem(COORDS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Coords;
+        if (typeof parsed.lat === "number" && typeof parsed.lon === "number") {
+          setCoords(parsed);
+          setGeoStatus("set");
+        }
+      }
+    } catch {
+      // ignore corrupt storage
+    }
+  }, []);
+
+  const requestLocation = () => {
+    if (geoStatus === "set") {
+      // Tapping the active chip switches back to the district dropdown.
+      setCoords(null);
+      setGeoStatus("idle");
+      localStorage.removeItem(COORDS_KEY);
+      return;
+    }
+    if (!("geolocation" in navigator)) {
+      setGeoStatus("error");
+      return;
+    }
+    setGeoStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const next = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        setCoords(next);
+        setGeoStatus("set");
+        localStorage.setItem(COORDS_KEY, JSON.stringify(next));
+      },
+      () => setGeoStatus("error"),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  };
 
   const mutation = useMutation({
     mutationFn: diagnose,
@@ -46,8 +97,8 @@ export default function HomePage() {
       image: file,
       text: text.trim(),
       language: locale,
-      lat: d.lat,
-      lon: d.lon,
+      lat: coords?.lat ?? d.lat,
+      lon: coords?.lon ?? d.lon,
       offline,
     });
   };
@@ -82,27 +133,52 @@ export default function HomePage() {
 
       <QuickSymptomChips onPick={(q) => setText(q)} />
 
-      {/* District + offline */}
-      <section className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          <MapPin className="size-4 text-primary" aria-hidden />
-          {t("home.district")}
-          <select
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            className="h-11 cursor-pointer rounded-md border-2 border-input bg-card px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      {/* Location + offline */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant={geoStatus === "set" ? "default" : "outline"}
+            size="sm"
+            onClick={requestLocation}
+            aria-pressed={geoStatus === "set"}
           >
-            {districts.map((d) => (
-              <option key={d.name} value={d.name}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 text-sm font-semibold">
-          {t("home.offline")}
-          <Switch checked={offline} onCheckedChange={setOffline} aria-label={t("home.offline")} />
-        </label>
+            {geoStatus === "loading" ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : geoStatus === "set" ? (
+              <Check className="size-4" aria-hidden />
+            ) : (
+              <LocateFixed className="size-4" aria-hidden />
+            )}
+            {geoStatus === "set" ? t("home.locationSet") : t("home.useLocation")}
+          </Button>
+          {geoStatus !== "set" && (
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <MapPin className="size-4 text-primary" aria-hidden />
+              {t("home.district")}
+              <select
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="h-11 cursor-pointer rounded-md border-2 border-input bg-card px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {districts.map((d) => (
+                  <option key={d.name} value={d.name}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            {t("home.offline")}
+            <Switch checked={offline} onCheckedChange={setOffline} aria-label={t("home.offline")} />
+          </label>
+        </div>
+        {geoStatus === "error" && (
+          <p className="text-xs font-semibold text-muted-foreground" role="status">
+            {t("home.locationError")}
+          </p>
+        )}
       </section>
 
       {/* Errors */}

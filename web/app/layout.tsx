@@ -13,13 +13,40 @@ const geistSans = localFont({
   weight: "100 900",
 });
 
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://agribloom.vercel.app";
+const TITLE = "AgriBloom — Free AI Crop Doctor";
+const DESCRIPTION =
+  "Scan a leaf, ask in your language, and get safe, regulation-checked crop treatment advice. Free and open source, built for Indian farmers.";
+
 export const metadata: Metadata = {
-  title: "AgriBloom — Free AI Crop Doctor",
-  description:
-    "Scan a leaf, ask in your language, and get safe, regulation-checked crop treatment advice. Free and open source, built for Indian farmers.",
+  metadataBase: new URL(APP_URL),
+  title: TITLE,
+  description: DESCRIPTION,
   manifest: "/manifest.json",
-  icons: { icon: "/icons/leaf.svg" },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icons/leaf.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "AgriBloom" },
+  openGraph: {
+    type: "website",
+    siteName: "AgriBloom",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: APP_URL,
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {
