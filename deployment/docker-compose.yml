@@ -1,0 +1,23 @@
+# Local full-stack verification before deploying. Run from the repo root:
+#   docker compose -f deployment/docker-compose.yml up --build
+# Then:
+#   curl http://localhost:7860/api/v1/health
+#   cd web && NEXT_PUBLIC_API_BASE_URL=http://localhost:7860 NEXT_PUBLIC_USE_MOCKS=false npm run dev
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    ports:
+      - "7860:7860"
+    env_file:
+      - ../.env
+    environment:
+      - ENVIRONMENT=prod
+    volumes:
+      # Trained checkpoint isn't in git (large, gitignored) — mount it locally
+      # for this compose run. On the actual HF Space it's committed via LFS
+      # directly to the Space repo instead (see deployment/README.md).
+      - ../models/checkpoints:/app/models/checkpoints:ro

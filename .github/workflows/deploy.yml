@@ -1,0 +1,33 @@
+name: Deploy backend to HuggingFace Space
+
+# Manual trigger only — deploying is a deliberate, reviewed action, not
+# something that fires on every push. Requires HF_TOKEN + HF_SPACE repo
+# secrets to be set (Settings -> Secrets and variables -> Actions).
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest tests/ -q
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push to HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}  # e.g. https://huggingface.co/spaces/<user>/agribloom-v2
+        run: |
+          git remote add hf "https://user:${HF_TOKEN}@${HF_SPACE#https://}"
+          git push hf HEAD:main --force

@@ -1,0 +1,32 @@
+# Keep the build context small. models/checkpoints/ is intentionally KEPT —
+# the trained EfficientNet checkpoint is required at runtime (see
+# deployment/README.md for how it gets into the image/Space).
+.git
+.git-backup
+.venv
+.venv-gpu-windows-backup
+__pycache__
+**/__pycache__
+.pytest_cache
+.aider*
+_archive
+agribloom.log
+training.log
+*.log
+
+# Frontend (deployed separately to Vercel, not part of the backend image)
+web/node_modules
+web/.next
+web/e2e
+
+# Large raw datasets — not needed at API runtime
+data/raw
+data/unified
+data/plantvillage_samples
+data/manifests
+data/kaggle
+
+# Dev-only
+notebooks
+tests
+.github
