@@ -280,8 +280,11 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
     if offline:
         cached = CACHE.get(cache_key, ttl_seconds=86400)
         if cached:
+            # Force False, not setdefault: this specific response is a cached
+            # snapshot served right now, regardless of whether the reading was
+            # live when it was ORIGINALLY fetched and cached.
             cached["source"] = "offline_cache"
-            cached.setdefault("is_live", False)
+            cached["is_live"] = False
             cached["note"] = "Last cached reading (offline mode)"
             return cached
         return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "offline_default",
@@ -363,7 +366,7 @@ def _fetch_weather(lat: float, lon: float, offline: bool) -> dict[str, Any]:
         cached = CACHE.get(cache_key, ttl_seconds=86400)
         if cached:
             cached["source"] = "cache_fallback"
-            cached.setdefault("is_live", False)
+            cached["is_live"] = False  # force, not setdefault — see offline branch above
             cached["note"] = "Recent cached reading (live fetch failed)"
             return cached
         return {"temp_c": 28, "rain_mm": 0.0, "humidity": 65, "source": "api_error",

@@ -144,21 +144,37 @@ def build_initial_state(
     lon: float = 78.4867,
     allow_path_hints: bool = False,
     model_dir: str | None = None,
+    auto_detect_offline: bool = True,
 ) -> AgriState:
     """Build the seed pipeline state shared by every graph (V1 linear, V2 ReAct).
 
     Kept as a standalone function so ``run_pipeline`` (V1/Gradio) and
     ``backend.pipeline.run_v2_pipeline`` (the API) build the exact same shape
     of initial state and never drift apart.
+
+    Automatic offline detection: an explicit ``offline=True`` is always
+    honored. Otherwise, when ``auto_detect_offline`` is True (the default), a
+    fast (~1.5s) network health check runs and — ONLY when the network is
+    genuinely poor — upgrades the request to offline mode on its own, so a
+    farmer on a bad connection isn't left waiting on doomed API calls. A fine
+    network is never downgraded to offline; this only ever tightens, never
+    loosens, the caller's request. Set ``auto_detect_offline=False`` to skip
+    the check entirely (e.g. in tests, or when the caller already knows).
     """
     effective_lang = lang or user_language or "en"
+    effective_offline = offline
+    if not effective_offline and auto_detect_offline:
+        from utils.network import should_force_offline
+
+        effective_offline = should_force_offline(False)
+
     return {
         "image": image,
         "image_path": image_path or "",
         "user_text": user_text,
         "user_language": effective_lang,
         "lang": effective_lang,
-        "offline": offline,
+        "offline": effective_offline,
         "lat": lat,
         "lon": lon,
         "chat_history": [],
@@ -206,10 +222,12 @@ def run_pipeline(
         lat=lat, lon=lon, allow_path_hints=allow_path_hints, model_dir=model_dir,
     )
     effective_lang = initial_state["lang"]
+    effective_offline = initial_state["offline"]
 
     logger.info(
-        f"Pipeline started: lang={effective_lang}, offline={offline}, "
-        f"has_image={image is not None}, text_len={len(user_text)}"
+        f"Pipeline started: lang={effective_lang}, offline={effective_offline}"
+        + (" (auto-detected: poor network)" if effective_offline and not offline else "")
+        + f", has_image={image is not None}, text_len={len(user_text)}"
     )
 
     try:

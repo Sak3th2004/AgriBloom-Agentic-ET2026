@@ -53,6 +53,15 @@ def run_compliance_reflexion(state: dict[str, Any]) -> dict[str, Any]:
     if not violations:
         return checked  # already clean
 
+    if state.get("offline"):
+        # No network calls in offline mode (explicit or auto-detected from a
+        # poor connection) — the deterministic block already protects the
+        # farmer, so there's nothing useful a regeneration attempt would do
+        # except hang.
+        report["reflexion"] = {"success": False, "escalated": True, "reason": "offline"}
+        logger.info("Reflexion skipped (offline); deterministic block stands")
+        return checked
+
     treatment = state.get("treatment", "") or ""
     lang = state.get("lang", "en")
     crop = state.get("crop_type", "unknown")

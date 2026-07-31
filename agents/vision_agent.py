@@ -542,25 +542,31 @@ def run_vision(state: dict[str, Any]) -> dict[str, Any]:
     if vision_fallback_result and vision_fallback_result.get("treatment"):
         treatment = vision_fallback_result["treatment"]
 
-    # ── GenAI treatment enhancement — ALWAYS call NVIDIA for detailed advice ──
-    # Note: We always try NVIDIA even in "offline" mode — treatment quality is critical
-    if label not in ["uncertain_detection", "unknown", "error"] and "healthy" not in label.lower():
+    # ── GenAI treatment enhancement (skipped entirely when offline) ───────
+    # `offline` is set either by explicit request or by the automatic
+    # network-health check (utils.network / main.build_initial_state) — in
+    # both cases a network call here would just hang/waste the farmer's time,
+    # so we go straight to the local DISEASE_TREATMENTS table instead.
+    if (
+        not offline
+        and label not in ["uncertain_detection", "unknown", "error"]
+        and "healthy" not in label.lower()
+    ):
         try:
-            import concurrent.futures
             from utils.genai_handler import generate_treatment_advice, is_genai_available
+            from utils.timeout import call_with_timeout
+
             if is_genai_available():
-                def _gen():
-                    return generate_treatment_advice(
-                        disease=label, crop=crop_type, language=lang,
-                    )
-                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                    future = executor.submit(_gen)
-                    genai_advice = future.result(timeout=30)  # 30s for detailed treatment
+                genai_advice = call_with_timeout(
+                    generate_treatment_advice,
+                    disease=label, crop=crop_type, language=lang,
+                    timeout=30,  # 30s budget for detailed treatment; never blocks past it
+                )
                 if genai_advice and len(genai_advice) > 50:
                     treatment = genai_advice
                     logger.info(f"NVIDIA treatment advice: {len(genai_advice)} chars")
-        except concurrent.futures.TimeoutError:
-            logger.warning("GenAI treatment timed out after 25s — using local treatment")
+        except TimeoutError:
+            logger.warning("GenAI treatment timed out — using local treatment")
         except Exception as e:
             logger.warning(f"GenAI treatment enhancement skipped: {e}")
 

@@ -27,6 +27,7 @@ from graph.state import (
     summarize_progress,
     valid_actions,
 )
+from utils.timeout import call_with_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -35,27 +36,6 @@ GenerateFn = Callable[[str], str]
 # Routing decisions must stay snappy: bound the wait regardless of how slow
 # the underlying provider fallback chain (NVIDIA -> Gemini -> Ollama) is.
 DECISION_TIMEOUT_SECONDS = 8.0
-
-
-def _call_with_budget(fn: GenerateFn, prompt: str, timeout_seconds: float) -> str:
-    """Call ``fn(prompt)`` with a hard wall-clock budget; raises on timeout.
-
-    Uses ``shutdown(wait=False)`` deliberately: if the provider chain is stuck
-    well past our budget, we must return control immediately rather than block
-    on the still-running background thread (that would defeat the timeout).
-    The orphaned thread is daemonized by the interpreter at process exit.
-    """
-    from concurrent.futures import ThreadPoolExecutor
-    from concurrent.futures import TimeoutError as FutureTimeout
-
-    pool = ThreadPoolExecutor(max_workers=1)
-    try:
-        future = pool.submit(fn, prompt)
-        return future.result(timeout=timeout_seconds)
-    except FutureTimeout as e:
-        raise TimeoutError(f"LLM decision exceeded {timeout_seconds}s budget") from e
-    finally:
-        pool.shutdown(wait=False)
 
 
 _SYSTEM = (
@@ -125,6 +105,12 @@ def decide_next_action(
     if len(allowed) == 1:
         return allowed[0]
 
+    if state.get("offline"):
+        # Don't even attempt a network call — go straight to the deterministic
+        # policy so a poor-connectivity farmer never pays the decision budget
+        # for a call we already know shouldn't be tried.
+        return deterministic_next(state)
+
     gen = generate or _default_generate()
     if gen is None:
         return deterministic_next(state)
@@ -135,7 +121,7 @@ def decide_next_action(
         tools=tool_descriptions(allowed),
     )
     try:
-        reply = _call_with_budget(gen, prompt, timeout_seconds=DECISION_TIMEOUT_SECONDS)
+        reply = call_with_timeout(gen, prompt, timeout=DECISION_TIMEOUT_SECONDS)
     except Exception as e:
         # Routing only needs one of a few actions, so it must never sit through
         # the full provider fallback chain (NVIDIA -> Gemini -> Ollama, which
