@@ -531,29 +531,54 @@ def run_knowledge(state: dict[str, Any]) -> dict[str, Any]:
     agronomy = _get_disease_agronomy(disease_label)
 
     # ── RAG: Query knowledge base for disease-specific advice ────────
+    # Phase-2 Hybrid RAG (BM25 + dense + RRF + cross-encoder rerank) is the
+    # primary retriever; the original ChromaDB semantic search is kept as a
+    # fallback if the hybrid retriever raises (e.g. missing optional deps) so
+    # this agent never loses RAG capability outright.
     rag_context = ""
+    query = (
+        f"{user_text}" if user_text and len(user_text) > 10
+        else (f"{crop} {disease_label.replace('_', ' ')}" if disease_label != "unknown" else crop)
+    )
     try:
         import concurrent.futures
-        def _run_rag():
-            from knowledge_base.build_knowledge_db import rag_query, symptom_search
-            if user_text and len(user_text) > 10:
-                return symptom_search(user_text, crop=crop, n_results=3)
-            else:
-                query = f"{crop} {disease_label.replace('_', ' ')}" if disease_label != "unknown" else crop
-                return rag_query(query, crop=crop, n_results=3)
+
+        def _run_hybrid_rag():
+            from rag.hybrid import hybrid_query
+
+            return hybrid_query(query, crop=crop, n_results=3)
 
         # RAG must complete in 5 seconds or we skip it
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(_run_rag)
+            future = executor.submit(_run_hybrid_rag)
             rag_results = future.result(timeout=5)
 
         if rag_results:
             rag_texts = [r["text"] for r in rag_results]
             rag_context = "\n".join(rag_texts[:2])  # Top 2 results
-            logger.info(f"RAG: found {len(rag_results)} relevant docs")
+            logger.info(f"Hybrid RAG: found {len(rag_results)} relevant docs")
 
     except Exception as e:
-        logger.warning(f"RAG query skipped: {e}")
+        logger.warning(f"Hybrid RAG failed ({e}), falling back to ChromaDB RAG")
+        try:
+            import concurrent.futures
+
+            def _run_legacy_rag():
+                from knowledge_base.build_knowledge_db import rag_query, symptom_search
+                if user_text and len(user_text) > 10:
+                    return symptom_search(user_text, crop=crop, n_results=3)
+                return rag_query(query, crop=crop, n_results=3)
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_run_legacy_rag)
+                rag_results = future.result(timeout=5)
+
+            if rag_results:
+                rag_texts = [r["text"] for r in rag_results]
+                rag_context = "\n".join(rag_texts[:2])
+                logger.info(f"ChromaDB RAG (fallback): found {len(rag_results)} relevant docs")
+        except Exception as e2:
+            logger.warning(f"RAG query skipped entirely: {e2}")
 
     # Build recommendations
     recommendations = _build_recommendations(
