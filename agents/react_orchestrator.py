@@ -32,6 +32,32 @@ logger = logging.getLogger(__name__)
 
 GenerateFn = Callable[[str], str]
 
+# Routing decisions must stay snappy: bound the wait regardless of how slow
+# the underlying provider fallback chain (NVIDIA -> Gemini -> Ollama) is.
+DECISION_TIMEOUT_SECONDS = 8.0
+
+
+def _call_with_budget(fn: GenerateFn, prompt: str, timeout_seconds: float) -> str:
+    """Call ``fn(prompt)`` with a hard wall-clock budget; raises on timeout.
+
+    Uses ``shutdown(wait=False)`` deliberately: if the provider chain is stuck
+    well past our budget, we must return control immediately rather than block
+    on the still-running background thread (that would defeat the timeout).
+    The orphaned thread is daemonized by the interpreter at process exit.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import TimeoutError as FutureTimeout
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        future = pool.submit(fn, prompt)
+        return future.result(timeout=timeout_seconds)
+    except FutureTimeout as e:
+        raise TimeoutError(f"LLM decision exceeded {timeout_seconds}s budget") from e
+    finally:
+        pool.shutdown(wait=False)
+
+
 _SYSTEM = (
     "You are the orchestrator of an agricultural advisory agent. Decide the "
     "SINGLE next action to take. Think briefly, then choose ONE action from the "
@@ -109,9 +135,14 @@ def decide_next_action(
         tools=tool_descriptions(allowed),
     )
     try:
-        reply = gen(prompt)
+        reply = _call_with_budget(gen, prompt, timeout_seconds=DECISION_TIMEOUT_SECONDS)
     except Exception as e:
-        logger.warning("ReAct: LLM decision failed (%s) — deterministic fallback", e)
+        # Routing only needs one of a few actions, so it must never sit through
+        # the full provider fallback chain (NVIDIA -> Gemini -> Ollama, which
+        # can take well over a minute when providers are rate-limited/down).
+        # Bounding this call keeps the agent responsive; treatment/compliance
+        # generation elsewhere keeps its own more patient timeouts.
+        logger.warning("ReAct: LLM decision failed/slow (%s) — deterministic fallback", e)
         return deterministic_next(state)
 
     action = parse_action(reply, allowed)

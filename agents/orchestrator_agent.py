@@ -193,7 +193,7 @@ def run_orchestrator(state: dict[str, Any]) -> dict[str, Any]:
         f"lang={user_language}, crop={detected_crop}, offline={offline}"
     )
 
-    return {
+    result = {
         **state,
         "chat_history": chat_history,
         "route": route,
@@ -202,6 +202,13 @@ def run_orchestrator(state: dict[str, Any]) -> dict[str, Any]:
         "lang": user_language,
         "status": "orchestrated",
     }
+    # Bridge detected_crop -> crop_type for text-only queries (no image, so the
+    # vision agent never runs and crop_type would otherwise stay unset and
+    # silently default elsewhere — e.g. knowledge_agent falling back to
+    # "maize" regardless of what crop the farmer actually asked about).
+    if detected_crop and not state.get("crop_type"):
+        result["crop_type"] = detected_crop
+    return result
 
 
 # Export

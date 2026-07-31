@@ -6,10 +6,19 @@ GPU if available) with an in-memory numpy index — no server required. If a
 Qdrant URL is configured it can be swapped in later; for now local numpy keeps
 it free and offline. Degrades gracefully: if sentence-transformers can't load,
 ``available`` is False and the hybrid retriever just uses BM25.
+
+Default embedder is BAAI/bge-m3 (open source, FlagOpen/FlagEmbedding —
+https://github.com/FlagOpen/FlagEmbedding), a highly-rated multilingual model
+covering 100+ languages including Hindi, Telugu, Tamil, Kannada, Bengali,
+Marathi, Gujarati, Malayalam — i.e. our farmer-facing languages — which
+all-MiniLM-L6-v2 (English-centric) does not cover well. Loads directly via
+sentence-transformers, no extra dependency. Override with
+AGRIBLOOM_EMBED_MODEL for a lighter model on constrained hardware.
 """
 from __future__ import annotations
 
 import logging
+import os
 from typing import Optional
 
 import numpy as np
@@ -18,7 +27,7 @@ from rag.ingestion import Document
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_EMBED_MODEL = os.getenv("AGRIBLOOM_EMBED_MODEL", "BAAI/bge-m3")
 
 
 def _l2_normalize(mat: np.ndarray) -> np.ndarray:

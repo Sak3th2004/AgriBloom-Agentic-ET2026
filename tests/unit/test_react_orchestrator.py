@@ -127,6 +127,26 @@ def test_decide_llm_error_falls_back(monkeypatch):
     assert decide_next_action(s, generate=boom) == VISION
 
 
+def test_decide_bounds_slow_llm_to_budget(monkeypatch):
+    # A provider chain stuck well past our decision budget must not block
+    # routing — this is the real bug found in Phase-7 e2e testing where
+    # NVIDIA->Gemini->Ollama fallback took 90-120s for a single decision.
+    import time as _time
+
+    monkeypatch.setattr(orch, "DECISION_TIMEOUT_SECONDS", 0.2)
+    s = {"image": object()}
+
+    def very_slow(prompt):
+        _time.sleep(5)
+        return '{"action":"knowledge"}'
+
+    t0 = _time.time()
+    result = decide_next_action(s, generate=very_slow)
+    elapsed = _time.time() - t0
+    assert result == VISION  # deterministic fallback, not the slow LLM's answer
+    assert elapsed < 1.0  # bounded by the budget, not the 5s sleep
+
+
 # ── full ReAct graph with stub tools ───────────────────────────────────────────
 def test_react_graph_runs_to_output(monkeypatch):
     from dataclasses import dataclass

@@ -2,20 +2,24 @@
 Cross-encoder re-ranking.
 
 RRF gives a good candidate set; a cross-encoder then scores each (query, doc)
-pair jointly for much sharper top-k precision. Uses
-``cross-encoder/ms-marco-MiniLM-L-6-v2``. Degrades gracefully: if the model
-can't load, :func:`rerank` returns the candidates unchanged.
+pair jointly for much sharper top-k precision. Default is BAAI/bge-reranker-v2-m3
+(open source, FlagOpen/FlagEmbedding — https://github.com/FlagOpen/FlagEmbedding),
+multilingual so it works on the same 10 Indian languages as the rest of the
+pipeline, not just English. Loads via sentence-transformers' CrossEncoder, no
+extra dependency. Override with AGRIBLOOM_RERANK_MODEL if needed. Degrades
+gracefully: if the model can't load, :func:`rerank` returns candidates unchanged.
 """
 from __future__ import annotations
 
 import logging
+import os
 from typing import Optional
 
 from rag.ingestion import Document
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+DEFAULT_RERANK_MODEL = os.getenv("AGRIBLOOM_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
 
 
 class CrossEncoderReranker:

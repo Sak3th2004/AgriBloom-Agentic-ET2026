@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
 
 from graph.state import COMPLIANCE, KNOWLEDGE, OUTPUT, VISION
 
@@ -112,11 +112,40 @@ def tool_descriptions(actions: list[str]) -> str:
     return "\n".join(f"- {a}: {REGISTRY[a].description}" for a in actions if a in REGISTRY)
 
 
-def run_tool(action: str, state: dict) -> dict:
-    """Execute a tool by name, marking it done. Unknown action -> unchanged."""
+def build_registry(use_reflexion: bool = False) -> dict[str, Tool]:
+    """Return a tool registry, optionally with Reflexion self-correcting compliance.
+
+    Returns the shared module-level :data:`REGISTRY` unchanged when
+    ``use_reflexion`` is False (so existing callers/tests that monkeypatch
+    ``REGISTRY`` keep working). When True, returns a NEW dict with the
+    compliance tool swapped for :func:`agents.compliance_reflexion.run_compliance_reflexion`
+    — the shared registry is never mutated, so this is safe to use alongside
+    the plain graph in the same process.
+    """
+    if not use_reflexion:
+        return REGISTRY
+    from agents.compliance_reflexion import run_compliance_reflexion
+
+    reflexion_registry = dict(REGISTRY)
+    base = REGISTRY[COMPLIANCE]
+    reflexion_registry[COMPLIANCE] = Tool(
+        COMPLIANCE,
+        base.description + " (Reflexion self-correction enabled.)",
+        run_compliance_reflexion,
+    )
+    return reflexion_registry
+
+
+def run_tool(action: str, state: dict, registry: Optional[dict[str, Tool]] = None) -> dict:
+    """Execute a tool by name, marking it done. Unknown action -> unchanged.
+
+    ``registry`` defaults to the shared module-level :data:`REGISTRY` (looked
+    up fresh on every call, so test monkeypatching of ``REGISTRY`` still works).
+    """
     from graph.state import mark_done
 
-    tool = REGISTRY.get(action)
+    reg = registry if registry is not None else REGISTRY
+    tool = reg.get(action)
     if tool is None:
         logger.warning("ReAct: unknown tool '%s' — skipping", action)
         return state

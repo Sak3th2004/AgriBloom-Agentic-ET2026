@@ -133,6 +133,41 @@ def _build_active_graph() -> Any:
 GRAPH = _build_active_graph()
 
 
+def build_initial_state(
+    image: Any = None,
+    image_path: str | None = None,
+    user_text: str = "",
+    user_language: str = "en",
+    lang: str | None = None,
+    offline: bool = False,
+    lat: float = 17.3850,
+    lon: float = 78.4867,
+    allow_path_hints: bool = False,
+    model_dir: str | None = None,
+) -> AgriState:
+    """Build the seed pipeline state shared by every graph (V1 linear, V2 ReAct).
+
+    Kept as a standalone function so ``run_pipeline`` (V1/Gradio) and
+    ``backend.pipeline.run_v2_pipeline`` (the API) build the exact same shape
+    of initial state and never drift apart.
+    """
+    effective_lang = lang or user_language or "en"
+    return {
+        "image": image,
+        "image_path": image_path or "",
+        "user_text": user_text,
+        "user_language": effective_lang,
+        "lang": effective_lang,
+        "offline": offline,
+        "lat": lat,
+        "lon": lon,
+        "chat_history": [],
+        "status": "received",
+        "allow_path_hints": allow_path_hints,
+        "model_dir": model_dir or "",
+    }
+
+
 def run_pipeline(
     image: Any = None,
     image_path: str | None = None,
@@ -165,24 +200,12 @@ def run_pipeline(
     """
     start_time = time.time()
 
-    # Normalize language code
-    effective_lang = lang or user_language or "en"
-
-    # Build initial state
-    initial_state: AgriState = {
-        "image": image,
-        "image_path": image_path or "",
-        "user_text": user_text,
-        "user_language": effective_lang,
-        "lang": effective_lang,
-        "offline": offline,
-        "lat": lat,
-        "lon": lon,
-        "chat_history": [],
-        "status": "received",
-        "allow_path_hints": allow_path_hints,
-        "model_dir": model_dir or "",
-    }
+    initial_state = build_initial_state(
+        image=image, image_path=image_path, user_text=user_text,
+        user_language=user_language, lang=lang, offline=offline,
+        lat=lat, lon=lon, allow_path_hints=allow_path_hints, model_dir=model_dir,
+    )
+    effective_lang = initial_state["lang"]
 
     logger.info(
         f"Pipeline started: lang={effective_lang}, offline={offline}, "

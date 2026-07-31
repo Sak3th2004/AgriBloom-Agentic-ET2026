@@ -175,6 +175,9 @@ def _get_gemini_model(force_reinit=False):
 # ═════════════════════════════════════════════════════════════════════════════
 # Ollama (LOCAL FALLBACK — zero rate limits)
 # ═════════════════════════════════════════════════════════════════════════════
+OLLAMA_TEXT_MODEL = os.getenv("AGRIBLOOM_OLLAMA_TEXT_MODEL", "qwen3.5:9b")
+
+
 def _ollama_generate(prompt: str) -> str:
     """Fallback: use local Ollama for text generation. Zero rate limits."""
     try:
@@ -182,7 +185,7 @@ def _ollama_generate(prompt: str) -> str:
         import json as _json
 
         payload = _json.dumps({
-            "model": "llama3.2:3b",
+            "model": OLLAMA_TEXT_MODEL,
             "prompt": prompt,
             "stream": False,
             "options": {"temperature": 0.7, "num_predict": 500},

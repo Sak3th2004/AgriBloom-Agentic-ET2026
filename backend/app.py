@@ -52,11 +52,21 @@ def set_pipeline(fn: Optional[PipelineFn]) -> None:
 
 
 def _get_pipeline() -> PipelineFn:
+    """Default pipeline for the API: the V2 agentic graph (ReAct + Reflexion +
+    ensemble vision + hybrid RAG). Falls back to V1's linear graph only if the
+    V2 graph fails to build, so the API never goes fully dark.
+    """
     global _pipeline
     if _pipeline is None:
-        from main import run_pipeline  # lazy: avoids loading torch at import
+        try:
+            from backend.pipeline import run_v2_pipeline  # lazy: avoids loading torch at import
 
-        _pipeline = run_pipeline
+            _pipeline = run_v2_pipeline
+        except Exception as e:
+            logger.error("V2 pipeline unavailable (%s) — falling back to V1 linear", e)
+            from main import run_pipeline
+
+            _pipeline = run_pipeline
     return _pipeline
 
 
